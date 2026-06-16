@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
-const TABS = ["🏠", "🍽", "🏃", "⚖️", "🎯"];
-const TAB_LABELS = ["ホーム", "食事", "運動", "体重", "目標"];
+const TABS = ["🏠", "🍽", "🏃", "⚖️", "📝", "🎯"];
+const TAB_LABELS = ["ホーム", "食事", "運動", "体重", "メモ", "目標"];
 
 function WeightGraph({ entries }) {
   if (entries.length === 0)
@@ -151,7 +151,7 @@ function CalorieCamera({ onAdd }) {
   );
 }
 
-const STORAGE_KEY = "dietapp_v5";
+const STORAGE_KEY = "dietapp_v6";
 
 function loadData() {
   try {
@@ -167,7 +167,6 @@ function saveData(data) {
   } catch {}
 }
 
-// 歩数から消費カロリーを計算（体重×0.035×歩数/1000）
 function calcStepCalories(steps, weight) {
   return Math.round(weight * 0.035 * steps / 1000 * 10) / 10;
 }
@@ -182,6 +181,9 @@ const EXERCISES = [
   { name: "ダンス", met: 5.5, icon: "💃" },
   { name: "その他", met: 4.0, icon: "⚡" },
 ];
+
+const MOODS = ["😊 良い", "😐 普通", "😴 疲れた", "😰 体調不良", "💪 絶好調"];
+const CONDITIONS = ["💧 水分OK", "😴 睡眠不足", "🤢 食欲なし", "🔥 やる気あり", "😌 リラックス"];
 
 export default function App() {
   const [tab, setTab] = useState(0);
@@ -202,17 +204,22 @@ export default function App() {
   const [exercises, setExercises] = useState(saved?.exercises || []);
   const [weights, setWeights] = useState(saved?.weights || []);
   const [goal, setGoal] = useState(saved?.goal || { target: 60, calLimit: 1800 });
+  const [memos, setMemos] = useState(saved?.memos || []);
 
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
   const [weightInput, setWeightInput] = useState("");
   const [goalTarget, setGoalTarget] = useState("");
   const [goalCalInput, setGoalCalInput] = useState("");
-
-  // 運動入力
   const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
   const [exerciseMinutes, setExerciseMinutes] = useState("");
   const [stepsInput, setStepsInput] = useState("");
+
+  // メモ入力
+  const [memoText, setMemoText] = useState("");
+  const [memoMood, setMemoMood] = useState(MOODS[0]);
+  const [memoCondition, setMemoCondition] = useState(CONDITIONS[0]);
+  const [memoType, setMemoType] = useState("日記");
 
   const timerRef = useRef(null);
 
@@ -228,8 +235,8 @@ export default function App() {
   }, [fastActive, fastStartTime, fastBaseElapsed]);
 
   useEffect(() => {
-    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal });
-  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal]);
+    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos });
+  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos]);
 
   const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#C77DFF", "#FFA07A"];
 
@@ -278,6 +285,20 @@ export default function App() {
     setGoalTarget(""); setGoalCalInput("");
   };
 
+  const addMemo = () => {
+    if (!memoText.trim()) return;
+    setMemos([{
+      id: Date.now(),
+      type: memoType,
+      text: memoText.trim(),
+      mood: memoMood,
+      condition: memoCondition,
+      date: new Date().toLocaleDateString("ja-JP"),
+      time: new Date().toTimeString().slice(0, 5),
+    }, ...memos]);
+    setMemoText("");
+  };
+
   const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
   const totalCal = meals.reduce((s, m) => s + m.cal, 0);
   const totalBurned = exercises.reduce((s, e) => s + e.burned, 0);
@@ -300,6 +321,8 @@ export default function App() {
   const card = { background: "#fff", borderRadius: 20, padding: 20, margin: "16px 16px 0", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" };
   const sec = { fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
   const tag = (c) => ({ background: c + "22", color: c, borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: "bold", whiteSpace: "nowrap" });
+
+  const memoTypeColors = { "日記": "#C77DFF", "食事メモ": "#FF6B6B", "体調メモ": "#4D96FF" };
 
   return (
     <div style={{ fontFamily: "'Segoe UI','Hiragino Sans',sans-serif", background: "#FFF9F0", minHeight: "100vh", maxWidth: 480, margin: "0 auto" }}>
@@ -335,7 +358,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* カロリーサマリー */}
           <div style={card}>
             <div style={sec}>🍽 カロリーバランス</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
@@ -376,6 +398,18 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {/* 今日のメモ */}
+          {memos.length > 0 && (
+            <div style={card}>
+              <div style={sec}>📝 今日の一言</div>
+              <div style={{ fontSize: 14, color: "#2D2D2D", lineHeight: 1.6 }}>
+                {memos[0].mood} {memos[0].condition}
+              </div>
+              <div style={{ fontSize: 14, color: "#444", marginTop: 6, lineHeight: 1.6 }}>{memos[0].text}</div>
+              <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{memos[0].date} {memos[0].time}</div>
+            </div>
+          )}
         </>}
 
         {/* 食事 */}
@@ -424,8 +458,7 @@ export default function App() {
               </div>
             ))}
             <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
-              <span>合計</span>
-              <span style={{ color: "#FF6B6B" }}>{totalCal} kcal</span>
+              <span>合計</span><span style={{ color: "#FF6B6B" }}>{totalCal} kcal</span>
             </div>
           </div>
         </>}
@@ -434,22 +467,20 @@ export default function App() {
         {tab === 2 && <>
           <div style={card}>
             <div style={sec}>🚶 歩数を記録</div>
-            <div>
-              <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>今日の歩数</label>
-              <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 8000"
-                value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))}
-                onFocus={(e) => e.target.style.borderColor = "#6BCB77"}
-                onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
-              {stepsInput && (
-                <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, marginBottom: 12, textAlign: "center" }}>
-                  <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
-                  <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
-                    {calcStepCalories(Number(stepsInput), latestWeight || 60)} kcal
-                  </span>
-                </div>
-              )}
-              <button onClick={addExercise} style={btn("#6BCB77")}>🚶 歩数を追加</button>
-            </div>
+            <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>今日の歩数</label>
+            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 8000"
+              value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))}
+              onFocus={(e) => e.target.style.borderColor = "#6BCB77"}
+              onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
+            {stepsInput && (
+              <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, marginBottom: 12, textAlign: "center" }}>
+                <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
+                <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
+                  {calcStepCalories(Number(stepsInput), latestWeight || 60)} kcal
+                </span>
+              </div>
+            )}
+            <button onClick={addExercise} style={btn("#6BCB77")}>🚶 歩数を追加</button>
           </div>
 
           <div style={card}>
@@ -459,9 +490,7 @@ export default function App() {
                 <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動の種類</label>
                 <select style={inp} value={selectedExercise.name}
                   onChange={(e) => setSelectedExercise(EXERCISES.find((ex) => ex.name === e.target.value))}>
-                  {EXERCISES.map((ex) => (
-                    <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>
-                  ))}
+                  {EXERCISES.map((ex) => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
                 </select>
               </div>
               <div>
@@ -500,8 +529,7 @@ export default function App() {
               </div>
             ))}
             <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
-              <span>合計消費</span>
-              <span style={{ color: "#6BCB77" }}>{totalBurned} kcal</span>
+              <span>合計消費</span><span style={{ color: "#6BCB77" }}>{totalBurned} kcal</span>
             </div>
           </div>
         </>}
@@ -533,8 +561,75 @@ export default function App() {
           </div>
         </>}
 
-        {/* 目標 */}
+        {/* メモ */}
         {tab === 4 && <>
+          <div style={card}>
+            <div style={sec}>📝 メモを追加</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* メモの種類 */}
+              <div style={{ display: "flex", gap: 8 }}>
+                {["日記", "食事メモ", "体調メモ"].map((t) => (
+                  <button key={t} onClick={() => setMemoType(t)}
+                    style={{ flex: 1, padding: "10px 4px", border: `2px solid ${memoType === t ? memoTypeColors[t] : "#E0E0E0"}`, borderRadius: 12, background: memoType === t ? memoTypeColors[t] + "22" : "#fff", color: memoType === t ? memoTypeColors[t] : "#888", fontWeight: "bold", fontSize: 12, cursor: "pointer", touchAction: "manipulation" }}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* 気分 */}
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>気分</label>
+                <select style={inp} value={memoMood} onChange={(e) => setMemoMood(e.target.value)}>
+                  {MOODS.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+
+              {/* 体調 */}
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>体調</label>
+                <select style={inp} value={memoCondition} onChange={(e) => setMemoCondition(e.target.value)}>
+                  {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {/* メモ本文 */}
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>メモ</label>
+                <textarea
+                  style={{ ...inp, height: 100, resize: "none", lineHeight: 1.6 }}
+                  placeholder="今日の食事・体調・気づきなど自由に記入..."
+                  value={memoText}
+                  onChange={(e) => setMemoText(e.target.value)}
+                  onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
+                />
+              </div>
+              <button onClick={addMemo} style={btn("#C77DFF")}>📝 メモを保存</button>
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={sec}>📖 メモ履歴</div>
+            {memos.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだメモがありません</div>}
+            {memos.slice(0, 10).map((m) => (
+              <div key={m.id} style={{ padding: "14px 0", borderBottom: "1px solid #F5F5F5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <span style={tag(memoTypeColors[m.type] || "#888")}>{m.type}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 11, color: "#888" }}>{m.date} {m.time}</span>
+                    <button onClick={() => setMemos(memos.filter((x) => x.id !== m.id))}
+                      style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 18, padding: "2px 6px", touchAction: "manipulation" }}>×</button>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>{m.mood} · {m.condition}</div>
+                <div style={{ fontSize: 14, color: "#2D2D2D", lineHeight: 1.6 }}>{m.text}</div>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {/* 目標 */}
+        {tab === 5 && <>
           <div style={card}>
             <div style={sec}>🎯 現在の目標</div>
             <div style={{ display: "flex", gap: 12 }}>
@@ -592,8 +687,8 @@ export default function App() {
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "#fff", display: "flex", borderTop: "1px solid #F0F0F0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
-            style={{ flex: 1, padding: "10px 4px 8px", border: "none", background: "none", fontSize: 11, fontWeight: i === tab ? "bold" : "normal", color: i === tab ? "#FF6B6B" : "#888", cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
-            <div style={{ fontSize: 20 }}>{icon}</div>
+            style={{ flex: 1, padding: "8px 2px 6px", border: "none", background: "none", fontSize: 10, fontWeight: i === tab ? "bold" : "normal", color: i === tab ? "#FF6B6B" : "#888", cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
+            <div style={{ fontSize: 18 }}>{icon}</div>
             <div>{TAB_LABELS[i]}</div>
           </button>
         ))}
