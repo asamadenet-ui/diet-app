@@ -151,7 +151,7 @@ function CalorieCamera({ onAdd }) {
   );
 }
 
-const STORAGE_KEY = "dietapp_v3";
+const STORAGE_KEY = "dietapp_v4";
 
 function loadData() {
   try {
@@ -167,25 +167,25 @@ function saveData(data) {
   } catch {}
 }
 
-const defaultData = {
-  fastElapsed: 0,
-  fastActive: false,
-  fastGoal: 16,
-  meals: [],
-  weights: [],
-  goal: { target: 60, calLimit: 1800 },
-};
-
 export default function App() {
   const [tab, setTab] = useState(0);
-  const saved = loadData() || defaultData;
+  const saved = loadData();
 
-  const [fastElapsed, setFastElapsed] = useState(saved.fastElapsed || 0);
-  const [fastActive, setFastActive] = useState(false);
-  const [fastGoal, setFastGoal] = useState(saved.fastGoal || 16);
-  const [meals, setMeals] = useState(saved.meals || []);
-  const [weights, setWeights] = useState(saved.weights || []);
-  const [goal, setGoal] = useState(saved.goal || defaultData.goal);
+  // タイマー：開始時刻を保存して再計算
+  const [fastGoal, setFastGoal] = useState(saved?.fastGoal || 16);
+  const [fastStartTime, setFastStartTime] = useState(saved?.fastStartTime || null);
+  const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed || 0);
+  const [fastActive, setFastActive] = useState(saved?.fastActive || false);
+  const [fastElapsed, setFastElapsed] = useState(() => {
+    if (saved?.fastActive && saved?.fastStartTime) {
+      return saved.fastBaseElapsed + Math.floor((Date.now() - saved.fastStartTime) / 1000);
+    }
+    return saved?.fastBaseElapsed || 0;
+  });
+
+  const [meals, setMeals] = useState(saved?.meals || []);
+  const [weights, setWeights] = useState(saved?.weights || []);
+  const [goal, setGoal] = useState(saved?.goal || { target: 60, calLimit: 1800 });
 
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
@@ -195,22 +195,43 @@ export default function App() {
 
   const timerRef = useRef(null);
 
+  // タイマー処理
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
-        setFastElapsed((e) => e + 1);
+        setFastElapsed(fastBaseElapsed + Math.floor((Date.now() - fastStartTime) / 1000));
       }, 1000);
     } else {
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [fastActive]);
+  }, [fastActive, fastStartTime, fastBaseElapsed]);
 
+  // データ保存
   useEffect(() => {
-    saveData({ fastElapsed, fastActive, fastGoal, meals, weights, goal });
-  }, [fastElapsed, fastActive, fastGoal, meals, weights, goal]);
+    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, weights, goal });
+  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, weights, goal]);
 
   const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#C77DFF", "#FFA07A"];
+
+  const handleTimerBtn = () => {
+    if (fastElapsed >= fastGoal * 3600) {
+      // リセット
+      setFastElapsed(0);
+      setFastBaseElapsed(0);
+      setFastStartTime(null);
+      setFastActive(false);
+    } else if (fastActive) {
+      // 停止
+      setFastBaseElapsed(fastElapsed);
+      setFastStartTime(null);
+      setFastActive(false);
+    } else {
+      // スタート
+      setFastStartTime(Date.now());
+      setFastActive(true);
+    }
+  };
 
   const addMeal = (name, cal) => {
     const n = name || mealName;
@@ -223,8 +244,7 @@ export default function App() {
       time: new Date().toTimeString().slice(0, 5),
       color: colors[meals.length % colors.length],
     }]);
-    setMealName("");
-    setMealCal("");
+    setMealName(""); setMealCal("");
   };
 
   const addWeight = () => {
@@ -242,13 +262,10 @@ export default function App() {
       target: goalTarget ? Number(goalTarget) : goal.target,
       calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit,
     });
-    setGoalTarget("");
-    setGoalCalInput("");
+    setGoalTarget(""); setGoalCalInput("");
   };
 
-  // 最新の体重を取得
   const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
-
   const totalCal = meals.reduce((s, m) => s + m.cal, 0);
   const weightLeft = latestWeight ? (latestWeight - goal.target).toFixed(1) : "−";
   const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
@@ -259,14 +276,12 @@ export default function App() {
     fontFamily: "inherit", backgroundColor: "#fff",
     WebkitAppearance: "none", appearance: "none", color: "#2D2D2D", display: "block",
   };
-
   const btn = (c, ex = {}) => ({
     background: c, color: "#fff", border: "none", borderRadius: 14,
     padding: "18px 24px", fontWeight: "bold", fontSize: 17, cursor: "pointer",
     width: "100%", WebkitTapHighlightColor: "transparent", touchAction: "manipulation",
     display: "block", textAlign: "center", ...ex,
   });
-
   const card = { background: "#fff", borderRadius: 20, padding: 20, margin: "16px 16px 0", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" };
   const sec = { fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
   const tag = (c) => ({ background: c + "22", color: c, borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: "bold", whiteSpace: "nowrap" });
@@ -281,8 +296,6 @@ export default function App() {
       </div>
 
       <div style={{ paddingBottom: 90 }}>
-
-        {/* ホーム */}
         {tab === 0 && <>
           <div style={card}>
             <div style={sec}>⏱ 断食タイマー</div>
@@ -292,15 +305,13 @@ export default function App() {
                 <div style={{ marginBottom: 10 }}>
                   <label style={{ fontSize: 12, color: "#888" }}>目標時間</label>
                   <select value={fastGoal}
-                    onChange={(e) => { setFastGoal(Number(e.target.value)); setFastElapsed(0); setFastActive(false); }}
+                    onChange={(e) => { setFastGoal(Number(e.target.value)); setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false); }}
                     style={{ ...inp, marginTop: 4 }}>
                     {[12, 14, 16, 18, 20, 24].map((h) => <option key={h} value={h}>{h}時間</option>)}
                   </select>
                 </div>
-                <button onClick={() => {
-                  if (fastElapsed >= fastGoal * 3600) { setFastElapsed(0); setFastActive(false); }
-                  else { setFastActive((a) => !a); }
-                }} style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
+                <button onClick={handleTimerBtn}
+                  style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
                 </button>
               </div>
@@ -334,13 +345,11 @@ export default function App() {
           </div>
         </>}
 
-        {/* 食事 */}
         {tab === 1 && <>
           <div style={card}>
             <div style={sec}>📷 写真でカロリー計算</div>
             <CalorieCamera onAdd={(name, cal) => addMeal(name, cal)} />
           </div>
-
           <div style={card}>
             <div style={sec}>✏️ 手動で追加</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -361,7 +370,6 @@ export default function App() {
               <button onClick={() => addMeal()} style={btn("#FF6B6B")}>➕ 追加する</button>
             </div>
           </div>
-
           <div style={card}>
             <div style={sec}>📋 今日の食事</div>
             {meals.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだ記録がありません</div>}
@@ -388,7 +396,6 @@ export default function App() {
           </div>
         </>}
 
-        {/* 体重 */}
         {tab === 2 && <>
           <div style={card}>
             <div style={sec}>📈 体重グラフ</div>
@@ -415,7 +422,6 @@ export default function App() {
           </div>
         </>}
 
-        {/* 目標 */}
         {tab === 3 && <>
           <div style={card}>
             <div style={sec}>🎯 現在の目標</div>
@@ -470,7 +476,6 @@ export default function App() {
         </>}
       </div>
 
-      {/* タブバー */}
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "#fff", display: "flex", borderTop: "1px solid #F0F0F0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
