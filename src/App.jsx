@@ -3,6 +3,22 @@ import { useState, useEffect, useRef } from "react";
 const TABS = ["🏠", "🍽", "⚖️", "🎯"];
 const TAB_LABELS = ["ホーム", "食事", "体重", "目標"];
 
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch { return initialValue; }
+  });
+  const setStoredValue = (val) => {
+    try {
+      setValue(val);
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch {}
+  };
+  return [value, setStoredValue];
+}
+
 function WeightGraph({ entries }) {
   if (entries.length === 0)
     return <div style={{ textAlign: "center", color: "#888", padding: "40px 0" }}>まだデータがありません</div>;
@@ -152,23 +168,34 @@ function CalorieCamera({ onAdd }) {
 
 export default function App() {
   const [tab, setTab] = useState(0);
-  const [fastActive, setFastActive] = useState(false);
-  const [fastElapsed, setFastElapsed] = useState(0);
-  const [fastGoal, setFastGoal] = useState(16);
+
+  // データ保存機能付き
+  const [fastElapsed, setFastElapsed] = useLocalStorage("fastElapsed", 0);
+  const [fastActive, setFastActive] = useLocalStorage("fastActive", false);
+  const [fastGoal, setFastGoal] = useLocalStorage("fastGoal", 16);
+  const [meals, setMeals] = useLocalStorage("meals", []);
+  const [weights, setWeights] = useLocalStorage("weights", [
+    { date: "2025-06-01", weight: 68.5 }, { date: "2025-06-04", weight: 67.9 },
+    { date: "2025-06-07", weight: 67.4 }, { date: "2025-06-10", weight: 66.8 },
+    { date: "2025-06-13", weight: 66.3 },
+  ]);
+  const [goal, setGoal] = useLocalStorage("goal", { current: 66.3, target: 60, calLimit: 1800 });
+
   const timerRef = useRef(null);
 
+  // タイマー（アプリを閉じても経過時間を保持）
   useEffect(() => {
     if (fastActive) {
-      timerRef.current = setInterval(() => setFastElapsed((e) => e + 1), 1000);
-    } else { clearInterval(timerRef.current); }
+      timerRef.current = setInterval(() => {
+        setFastElapsed((e) => e + 1);
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
     return () => clearInterval(timerRef.current);
   }, [fastActive]);
 
   const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#C77DFF", "#FFA07A"];
-  const [meals, setMeals] = useState([
-    { id: 1, name: "ランチ（チキンサラダ）", cal: 420, time: "12:30", color: "#6BCB77" },
-    { id: 2, name: "夕食（鮭定食）", cal: 680, time: "19:00", color: "#4D96FF" },
-  ]);
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
 
@@ -179,11 +206,6 @@ export default function App() {
   };
 
   const totalCal = meals.reduce((s, m) => s + m.cal, 0);
-  const [weights, setWeights] = useState([
-    { date: "2025-06-01", weight: 68.5 }, { date: "2025-06-04", weight: 67.9 },
-    { date: "2025-06-07", weight: 67.4 }, { date: "2025-06-10", weight: 66.8 },
-    { date: "2025-06-13", weight: 66.3 },
-  ]);
   const [weightInput, setWeightInput] = useState("");
 
   const addWeight = () => {
@@ -194,7 +216,6 @@ export default function App() {
     setWeightInput("");
   };
 
-  const [goal, setGoal] = useState({ current: 66.3, target: 60, calLimit: 1800 });
   const [goalTarget, setGoalTarget] = useState("");
   const [goalCal, setGoalCal] = useState("");
 
@@ -239,7 +260,8 @@ export default function App() {
                     {[12, 14, 16, 18, 20, 24].map((h) => <option key={h} value={h}>{h}時間</option>)}
                   </select>
                 </div>
-                <button onTouchEnd={(e) => { e.preventDefault(); if (fastElapsed >= fastGoal * 3600) { setFastElapsed(0); setFastActive(false); } else { setFastActive(!fastActive); } }}
+                <button
+                  onTouchEnd={(e) => { e.preventDefault(); if (fastElapsed >= fastGoal * 3600) { setFastElapsed(0); setFastActive(false); } else { setFastActive(!fastActive); } }}
                   onClick={() => { if (fastElapsed >= fastGoal * 3600) { setFastElapsed(0); setFastActive(false); } else { setFastActive(!fastActive); } }}
                   style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
