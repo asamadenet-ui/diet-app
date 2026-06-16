@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
-const TABS = ["🏠", "🍽", "⚖️", "🎯"];
-const TAB_LABELS = ["ホーム", "食事", "体重", "目標"];
+const TABS = ["🏠", "🍽", "🏃", "⚖️", "🎯"];
+const TAB_LABELS = ["ホーム", "食事", "運動", "体重", "目標"];
 
 function WeightGraph({ entries }) {
   if (entries.length === 0)
@@ -151,7 +151,7 @@ function CalorieCamera({ onAdd }) {
   );
 }
 
-const STORAGE_KEY = "dietapp_v4";
+const STORAGE_KEY = "dietapp_v5";
 
 function loadData() {
   try {
@@ -167,11 +167,26 @@ function saveData(data) {
   } catch {}
 }
 
+// 歩数から消費カロリーを計算（体重×0.035×歩数/1000）
+function calcStepCalories(steps, weight) {
+  return Math.round(weight * 0.035 * steps / 1000 * 10) / 10;
+}
+
+const EXERCISES = [
+  { name: "ウォーキング", met: 3.5, icon: "🚶" },
+  { name: "ジョギング", met: 7.0, icon: "🏃" },
+  { name: "サイクリング", met: 6.0, icon: "🚴" },
+  { name: "水泳", met: 8.0, icon: "🏊" },
+  { name: "筋トレ", met: 5.0, icon: "💪" },
+  { name: "ヨガ", met: 2.5, icon: "🧘" },
+  { name: "ダンス", met: 5.5, icon: "💃" },
+  { name: "その他", met: 4.0, icon: "⚡" },
+];
+
 export default function App() {
   const [tab, setTab] = useState(0);
   const saved = loadData();
 
-  // タイマー：開始時刻を保存して再計算
   const [fastGoal, setFastGoal] = useState(saved?.fastGoal || 16);
   const [fastStartTime, setFastStartTime] = useState(saved?.fastStartTime || null);
   const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed || 0);
@@ -184,6 +199,7 @@ export default function App() {
   });
 
   const [meals, setMeals] = useState(saved?.meals || []);
+  const [exercises, setExercises] = useState(saved?.exercises || []);
   const [weights, setWeights] = useState(saved?.weights || []);
   const [goal, setGoal] = useState(saved?.goal || { target: 60, calLimit: 1800 });
 
@@ -193,9 +209,13 @@ export default function App() {
   const [goalTarget, setGoalTarget] = useState("");
   const [goalCalInput, setGoalCalInput] = useState("");
 
+  // 運動入力
+  const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
+  const [exerciseMinutes, setExerciseMinutes] = useState("");
+  const [stepsInput, setStepsInput] = useState("");
+
   const timerRef = useRef(null);
 
-  // タイマー処理
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
@@ -207,29 +227,19 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [fastActive, fastStartTime, fastBaseElapsed]);
 
-  // データ保存
   useEffect(() => {
-    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, weights, goal });
-  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, weights, goal]);
+    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal });
+  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal]);
 
   const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#C77DFF", "#FFA07A"];
 
   const handleTimerBtn = () => {
     if (fastElapsed >= fastGoal * 3600) {
-      // リセット
-      setFastElapsed(0);
-      setFastBaseElapsed(0);
-      setFastStartTime(null);
-      setFastActive(false);
+      setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
     } else if (fastActive) {
-      // 停止
-      setFastBaseElapsed(fastElapsed);
-      setFastStartTime(null);
-      setFastActive(false);
+      setFastBaseElapsed(fastElapsed); setFastStartTime(null); setFastActive(false);
     } else {
-      // スタート
-      setFastStartTime(Date.now());
-      setFastActive(true);
+      setFastStartTime(Date.now()); setFastActive(true);
     }
   };
 
@@ -237,38 +247,43 @@ export default function App() {
     const n = name || mealName;
     const c = cal || mealCal;
     if (!n || !c) return;
-    setMeals([...meals, {
-      id: Date.now(),
-      name: String(n).trim(),
-      cal: Number(c),
-      time: new Date().toTimeString().slice(0, 5),
-      color: colors[meals.length % colors.length],
-    }]);
+    setMeals([...meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: colors[meals.length % colors.length] }]);
     setMealName(""); setMealCal("");
+  };
+
+  const addExercise = () => {
+    const w = weights.length > 0 ? weights[weights.length - 1].weight : 60;
+    if (stepsInput) {
+      const steps = Number(stepsInput);
+      const burned = calcStepCalories(steps, w);
+      setExercises([...exercises, { id: Date.now(), name: `🚶 歩数: ${steps.toLocaleString()}歩`, burned, time: new Date().toTimeString().slice(0, 5) }]);
+      setStepsInput("");
+    } else if (exerciseMinutes) {
+      const mins = Number(exerciseMinutes);
+      const burned = Math.round(selectedExercise.met * w * mins / 60);
+      setExercises([...exercises, { id: Date.now(), name: `${selectedExercise.icon} ${selectedExercise.name} ${mins}分`, burned, time: new Date().toTimeString().slice(0, 5) }]);
+      setExerciseMinutes("");
+    }
   };
 
   const addWeight = () => {
     if (!weightInput) return;
     const today = new Date().toISOString().slice(0, 10);
-    const newWeights = [...weights.filter((w) => w.date !== today),
-      { date: today, weight: Number(weightInput) }
-    ].sort((a, b) => a.date.localeCompare(b.date));
-    setWeights(newWeights);
+    setWeights([...weights.filter((w) => w.date !== today), { date: today, weight: Number(weightInput) }].sort((a, b) => a.date.localeCompare(b.date)));
     setWeightInput("");
   };
 
   const saveGoal = () => {
-    setGoal({
-      target: goalTarget ? Number(goalTarget) : goal.target,
-      calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit,
-    });
+    setGoal({ target: goalTarget ? Number(goalTarget) : goal.target, calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit });
     setGoalTarget(""); setGoalCalInput("");
   };
 
   const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
   const totalCal = meals.reduce((s, m) => s + m.cal, 0);
+  const totalBurned = exercises.reduce((s, e) => s + e.burned, 0);
+  const netCal = totalCal - totalBurned;
   const weightLeft = latestWeight ? (latestWeight - goal.target).toFixed(1) : "−";
-  const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
+  const calPct = Math.min((netCal / goal.calLimit) * 100, 100);
 
   const inp = {
     border: "2px solid #E0E0E0", borderRadius: 12, padding: "16px",
@@ -296,6 +311,8 @@ export default function App() {
       </div>
 
       <div style={{ paddingBottom: 90 }}>
+
+        {/* ホーム */}
         {tab === 0 && <>
           <div style={card}>
             <div style={sec}>⏱ 断食タイマー</div>
@@ -318,14 +335,30 @@ export default function App() {
             </div>
           </div>
 
+          {/* カロリーサマリー */}
           <div style={card}>
-            <div style={sec}>🍽 今日のカロリー</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <span style={{ fontSize: 28, fontWeight: "bold" }}>{totalCal} <span style={{ fontSize: 14, color: "#888" }}>kcal</span></span>
-              <span style={tag(calPct > 90 ? "#FF6B6B" : "#6BCB77")}>残り {goal.calLimit - totalCal}</span>
+            <div style={sec}>🍽 カロリーバランス</div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+              <div style={{ flex: 1, background: "#FF6B6B15", borderRadius: 14, padding: 12, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#888" }}>摂取</div>
+                <div style={{ fontSize: 22, fontWeight: "bold", color: "#FF6B6B" }}>{totalCal}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>kcal</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", fontSize: 20 }}>−</div>
+              <div style={{ flex: 1, background: "#6BCB7715", borderRadius: 14, padding: 12, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#888" }}>消費</div>
+                <div style={{ fontSize: 22, fontWeight: "bold", color: "#6BCB77" }}>{totalBurned}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>kcal</div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", fontSize: 20 }}>=</div>
+              <div style={{ flex: 1, background: "#4D96FF15", borderRadius: 14, padding: 12, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#888" }}>正味</div>
+                <div style={{ fontSize: 22, fontWeight: "bold", color: "#4D96FF" }}>{netCal}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>kcal</div>
+              </div>
             </div>
             <div style={{ background: "#F0F0F0", borderRadius: 10, height: 10, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${calPct}%`, background: `linear-gradient(90deg,#6BCB77,${calPct > 80 ? "#FF6B6B" : "#4D96FF"})`, borderRadius: 10, transition: "width 0.5s" }} />
+              <div style={{ height: "100%", width: `${Math.max(0, calPct)}%`, background: `linear-gradient(90deg,#6BCB77,${calPct > 80 ? "#FF6B6B" : "#4D96FF"})`, borderRadius: 10, transition: "width 0.5s" }} />
             </div>
             <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>目標: {goal.calLimit} kcal</div>
           </div>
@@ -345,6 +378,7 @@ export default function App() {
           </div>
         </>}
 
+        {/* 食事 */}
         {tab === 1 && <>
           <div style={card}>
             <div style={sec}>📷 写真でカロリー計算</div>
@@ -391,12 +425,89 @@ export default function App() {
             ))}
             <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
               <span>合計</span>
-              <span style={{ color: totalCal > goal.calLimit ? "#FF6B6B" : "#6BCB77" }}>{totalCal} kcal</span>
+              <span style={{ color: "#FF6B6B" }}>{totalCal} kcal</span>
             </div>
           </div>
         </>}
 
+        {/* 運動 */}
         {tab === 2 && <>
+          <div style={card}>
+            <div style={sec}>🚶 歩数を記録</div>
+            <div>
+              <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>今日の歩数</label>
+              <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 8000"
+                value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))}
+                onFocus={(e) => e.target.style.borderColor = "#6BCB77"}
+                onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
+              {stepsInput && (
+                <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, marginBottom: 12, textAlign: "center" }}>
+                  <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
+                  <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
+                    {calcStepCalories(Number(stepsInput), latestWeight || 60)} kcal
+                  </span>
+                </div>
+              )}
+              <button onClick={addExercise} style={btn("#6BCB77")}>🚶 歩数を追加</button>
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={sec}>🏃 運動を記録</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動の種類</label>
+                <select style={inp} value={selectedExercise.name}
+                  onChange={(e) => setSelectedExercise(EXERCISES.find((ex) => ex.name === e.target.value))}>
+                  {EXERCISES.map((ex) => (
+                    <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動時間 (分)</label>
+                <input style={inp} type="tel" placeholder="例: 30"
+                  value={exerciseMinutes} onChange={(e) => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                  onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
+              </div>
+              {exerciseMinutes && (
+                <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, textAlign: "center" }}>
+                  <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
+                  <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
+                    {Math.round(selectedExercise.met * (latestWeight || 60) * Number(exerciseMinutes) / 60)} kcal
+                  </span>
+                </div>
+              )}
+              <button onClick={addExercise} style={btn("#FF6B6B")}>🏃 運動を追加</button>
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={sec}>📋 今日の運動</div>
+            {exercises.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだ記録がありません</div>}
+            {exercises.map((e) => (
+              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #F5F5F5" }}>
+                <div>
+                  <div style={{ fontWeight: "bold", fontSize: 14 }}>{e.name}</div>
+                  <div style={{ fontSize: 11, color: "#888" }}>{e.time}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={tag("#6BCB77")}>{e.burned} kcal</span>
+                  <button onClick={() => setExercises(exercises.filter((x) => x.id !== e.id))}
+                    style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 22, padding: "8px 10px", touchAction: "manipulation" }}>×</button>
+                </div>
+              </div>
+            ))}
+            <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
+              <span>合計消費</span>
+              <span style={{ color: "#6BCB77" }}>{totalBurned} kcal</span>
+            </div>
+          </div>
+        </>}
+
+        {/* 体重 */}
+        {tab === 3 && <>
           <div style={card}>
             <div style={sec}>📈 体重グラフ</div>
             <WeightGraph entries={weights} />
@@ -422,7 +533,8 @@ export default function App() {
           </div>
         </>}
 
-        {tab === 3 && <>
+        {/* 目標 */}
+        {tab === 4 && <>
           <div style={card}>
             <div style={sec}>🎯 現在の目標</div>
             <div style={{ display: "flex", gap: 12 }}>
@@ -476,11 +588,12 @@ export default function App() {
         </>}
       </div>
 
+      {/* タブバー */}
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "#fff", display: "flex", borderTop: "1px solid #F0F0F0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
             style={{ flex: 1, padding: "10px 4px 8px", border: "none", background: "none", fontSize: 11, fontWeight: i === tab ? "bold" : "normal", color: i === tab ? "#FF6B6B" : "#888", cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation" }}>
-            <div style={{ fontSize: 22 }}>{icon}</div>
+            <div style={{ fontSize: 20 }}>{icon}</div>
             <div>{TAB_LABELS[i]}</div>
           </button>
         ))}
