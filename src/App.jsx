@@ -63,7 +63,95 @@ function FastingRing({ elapsed, total, active }) {
   );
 }
 
-const STORAGE_KEY = "dietapp_v2";
+function CalorieCamera({ onAdd }) {
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const fileRef = useRef();
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { setImage(ev.target.result); setResult(null); setError(null); };
+    reader.readAsDataURL(file);
+  };
+
+  const analyze = async () => {
+    if (!image) return;
+    setLoading(true); setError(null);
+    try {
+      const base64 = image.split(",")[1];
+      const mediaType = image.split(";")[0].split(":")[1];
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+              { type: "text", text: "この食事の写真を見て、料理名とカロリーを推定してください。必ず以下のJSON形式のみで返答してください（他のテキストは不要）：{\"name\":\"料理名\",\"calories\":数値,\"description\":\"簡単な説明\"}" }
+            ]
+          }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content[0].text;
+      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+      setResult(parsed);
+    } catch (e) {
+      setError("解析に失敗しました。もう一度試してください。");
+    }
+    setLoading(false);
+  };
+
+  const tb = (c, ex = {}) => ({
+    background: c, color: "#fff", border: "none", borderRadius: 14,
+    padding: "16px 20px", fontWeight: "bold", fontSize: 15, cursor: "pointer",
+    touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+    display: "block", width: "100%", ...ex,
+  });
+
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} />
+      <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+        <button onClick={() => { fileRef.current.removeAttribute("capture"); fileRef.current.click(); }}
+          style={tb("#FF6B6B", { flex: 1 })}>📁 アルバム</button>
+        <button onClick={() => { fileRef.current.setAttribute("capture", "environment"); fileRef.current.click(); }}
+          style={tb("#4D96FF", { flex: 1 })}>📷 カメラ</button>
+      </div>
+      {image && (
+        <div style={{ marginBottom: 12 }}>
+          <img src={image} alt="食事" style={{ width: "100%", borderRadius: 16, maxHeight: 200, objectFit: "cover" }} />
+          <button onClick={() => { if (!loading) analyze(); }} disabled={loading}
+            style={tb(loading ? "#CCC" : "#6BCB77", { marginTop: 10 })}>
+            {loading ? "🤖 AI解析中..." : "🤖 AIでカロリーを計算"}
+          </button>
+        </div>
+      )}
+      {error && <div style={{ color: "#FF6B6B", fontSize: 13, padding: "8px 0" }}>{error}</div>}
+      {result && (
+        <div style={{ background: "#6BCB7715", borderRadius: 16, padding: 16, marginTop: 8 }}>
+          <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>AI解析結果</div>
+          <div style={{ fontWeight: "bold", fontSize: 18, marginBottom: 4 }}>{result.name}</div>
+          <div style={{ fontSize: 14, color: "#666", marginBottom: 12 }}>{result.description}</div>
+          <div style={{ fontSize: 32, fontWeight: "bold", color: "#6BCB77", marginBottom: 12 }}>
+            {result.calories} <span style={{ fontSize: 16 }}>kcal</span>
+          </div>
+          <button onClick={() => { onAdd(result.name, result.calories); setImage(null); setResult(null); }}
+            style={tb("#FF6B6B")}>✅ 食事記録に追加</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STORAGE_KEY = "dietapp_v3";
 
 function loadData() {
   try {
@@ -85,7 +173,7 @@ const defaultData = {
   fastGoal: 16,
   meals: [],
   weights: [],
-  goal: { current: 66.3, target: 60, calLimit: 1800 },
+  goal: { target: 60, calLimit: 1800 },
 };
 
 export default function App() {
@@ -107,15 +195,10 @@ export default function App() {
 
   const timerRef = useRef(null);
 
-  // タイマー
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
-        setFastElapsed((e) => {
-          const next = e + 1;
-          saveData({ fastElapsed: next, fastActive: true, fastGoal, meals, weights, goal });
-          return next;
-        });
+        setFastElapsed((e) => e + 1);
       }, 1000);
     } else {
       clearInterval(timerRef.current);
@@ -123,29 +206,29 @@ export default function App() {
     return () => clearInterval(timerRef.current);
   }, [fastActive]);
 
-  // データ保存
   useEffect(() => {
     saveData({ fastElapsed, fastActive, fastGoal, meals, weights, goal });
   }, [fastElapsed, fastActive, fastGoal, meals, weights, goal]);
 
   const colors = ["#FF6B6B", "#6BCB77", "#4D96FF", "#C77DFF", "#FFA07A"];
 
-  const addMeal = () => {
-    if (!mealName.trim() || !mealCal.trim()) return;
-    const newMeals = [...meals, {
+  const addMeal = (name, cal) => {
+    const n = name || mealName;
+    const c = cal || mealCal;
+    if (!n || !c) return;
+    setMeals([...meals, {
       id: Date.now(),
-      name: mealName.trim(),
-      cal: Number(mealCal),
+      name: String(n).trim(),
+      cal: Number(c),
       time: new Date().toTimeString().slice(0, 5),
       color: colors[meals.length % colors.length],
-    }];
-    setMeals(newMeals);
+    }]);
     setMealName("");
     setMealCal("");
   };
 
   const addWeight = () => {
-    if (!weightInput.trim()) return;
+    if (!weightInput) return;
     const today = new Date().toISOString().slice(0, 10);
     const newWeights = [...weights.filter((w) => w.date !== today),
       { date: today, weight: Number(weightInput) }
@@ -155,92 +238,41 @@ export default function App() {
   };
 
   const saveGoal = () => {
-    const newGoal = {
-      ...goal,
+    setGoal({
       target: goalTarget ? Number(goalTarget) : goal.target,
       calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit,
-    };
-    setGoal(newGoal);
+    });
     setGoalTarget("");
     setGoalCalInput("");
   };
 
+  // 最新の体重を取得
+  const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
+
   const totalCal = meals.reduce((s, m) => s + m.cal, 0);
-  const weightLeft = (goal.current - goal.target).toFixed(1);
+  const weightLeft = latestWeight ? (latestWeight - goal.target).toFixed(1) : "−";
   const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
 
   const inp = {
-    border: "2px solid #E0E0E0",
-    borderRadius: 12,
-    padding: "16px",
-    fontSize: 18,
-    width: "100%",
-    boxSizing: "border-box",
-    outline: "none",
-    fontFamily: "inherit",
-    backgroundColor: "#fff",
-    WebkitAppearance: "none",
-    appearance: "none",
-    color: "#2D2D2D",
-    display: "block",
+    border: "2px solid #E0E0E0", borderRadius: 12, padding: "16px",
+    fontSize: 18, width: "100%", boxSizing: "border-box", outline: "none",
+    fontFamily: "inherit", backgroundColor: "#fff",
+    WebkitAppearance: "none", appearance: "none", color: "#2D2D2D", display: "block",
   };
 
   const btn = (c, ex = {}) => ({
-    background: c,
-    color: "#fff",
-    border: "none",
-    borderRadius: 14,
-    padding: "18px 24px",
-    fontWeight: "bold",
-    fontSize: 17,
-    cursor: "pointer",
-    width: "100%",
-    WebkitTapHighlightColor: "transparent",
-    touchAction: "manipulation",
-    display: "block",
-    textAlign: "center",
-    ...ex,
+    background: c, color: "#fff", border: "none", borderRadius: 14,
+    padding: "18px 24px", fontWeight: "bold", fontSize: 17, cursor: "pointer",
+    width: "100%", WebkitTapHighlightColor: "transparent", touchAction: "manipulation",
+    display: "block", textAlign: "center", ...ex,
   });
 
-  const card = {
-    background: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    margin: "16px 16px 0",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.07)",
-  };
-
-  const sec = {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#888",
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  };
-
-  const tag = (c) => ({
-    background: c + "22",
-    color: c,
-    borderRadius: 20,
-    padding: "4px 12px",
-    fontSize: 12,
-    fontWeight: "bold",
-    whiteSpace: "nowrap",
-  });
-
-  const handleTimerBtn = () => {
-    if (fastElapsed >= fastGoal * 3600) {
-      setFastElapsed(0);
-      setFastActive(false);
-    } else {
-      setFastActive((a) => !a);
-    }
-  };
+  const card = { background: "#fff", borderRadius: 20, padding: 20, margin: "16px 16px 0", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" };
+  const sec = { fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
+  const tag = (c) => ({ background: c + "22", color: c, borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: "bold", whiteSpace: "nowrap" });
 
   return (
     <div style={{ fontFamily: "'Segoe UI','Hiragino Sans',sans-serif", background: "#FFF9F0", minHeight: "100vh", maxWidth: 480, margin: "0 auto" }}>
-      {/* ヘッダー */}
       <div style={{ background: "linear-gradient(135deg,#FF6B6B,#C77DFF)", color: "#fff", padding: "20px 20px 24px", borderRadius: "0 0 24px 24px" }}>
         <div style={{ fontSize: 20, fontWeight: "bold" }}>🌸 ダイエットアプリ</div>
         <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}>
@@ -265,8 +297,10 @@ export default function App() {
                     {[12, 14, 16, 18, 20, 24].map((h) => <option key={h} value={h}>{h}時間</option>)}
                   </select>
                 </div>
-                <button onClick={handleTimerBtn}
-                  style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
+                <button onClick={() => {
+                  if (fastElapsed >= fastGoal * 3600) { setFastElapsed(0); setFastActive(false); }
+                  else { setFastActive((a) => !a); }
+                }} style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
                 </button>
               </div>
@@ -288,7 +322,10 @@ export default function App() {
           <div style={card}>
             <div style={sec}>⚖️ 体重</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div><span style={{ fontSize: 32, fontWeight: "bold" }}>{goal.current}</span><span style={{ fontSize: 14, color: "#888" }}> kg</span></div>
+              <div>
+                <span style={{ fontSize: 32, fontWeight: "bold" }}>{latestWeight || "−"}</span>
+                <span style={{ fontSize: 14, color: "#888" }}> kg</span>
+              </div>
               <div style={{ textAlign: "right" }}>
                 <div style={tag("#C77DFF")}>目標まで {weightLeft} kg</div>
                 <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>目標: {goal.target} kg</div>
@@ -300,33 +337,28 @@ export default function App() {
         {/* 食事 */}
         {tab === 1 && <>
           <div style={card}>
-            <div style={sec}>✏️ 食事を追加</div>
+            <div style={sec}>📷 写真でカロリー計算</div>
+            <CalorieCamera onAdd={(name, cal) => addMeal(name, cal)} />
+          </div>
+
+          <div style={card}>
+            <div style={sec}>✏️ 手動で追加</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div>
                 <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>食事名</label>
-                <input
-                  style={inp}
-                  type="text"
-                  placeholder="例：チキンサラダ"
-                  value={mealName}
-                  onChange={(e) => setMealName(e.target.value)}
+                <input style={inp} type="text" placeholder="例：チキンサラダ"
+                  value={mealName} onChange={(e) => setMealName(e.target.value)}
                   onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-                />
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
               </div>
               <div>
                 <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>カロリー (kcal)</label>
-                <input
-                  style={inp}
-                  type="tel"
-                  placeholder="例：420"
-                  value={mealCal}
-                  onChange={(e) => setMealCal(e.target.value.replace(/[^0-9]/g, ""))}
+                <input style={inp} type="tel" placeholder="例：420"
+                  value={mealCal} onChange={(e) => setMealCal(e.target.value.replace(/[^0-9]/g, ""))}
                   onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-                />
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
               </div>
-              <button onClick={addMeal} style={btn("#FF6B6B")}>➕ 追加する</button>
+              <button onClick={() => addMeal()} style={btn("#FF6B6B")}>➕ 追加する</button>
             </div>
           </div>
 
@@ -365,15 +397,10 @@ export default function App() {
           <div style={card}>
             <div style={sec}>➕ 体重を記録</div>
             <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>体重 (kg)</label>
-            <input
-              style={{ ...inp, marginBottom: 12 }}
-              type="tel"
-              placeholder="例: 66.5"
-              value={weightInput}
-              onChange={(e) => setWeightInput(e.target.value.replace(/[^0-9.]/g, ""))}
+            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 66.5"
+              value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^0-9.]/g, ""))}
               onFocus={(e) => e.target.style.borderColor = "#4D96FF"}
-              onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-            />
+              onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
             <button onClick={addWeight} style={btn("#4D96FF")}>⚖️ 記録する</button>
           </div>
           <div style={card}>
@@ -412,27 +439,17 @@ export default function App() {
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div>
                 <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>目標体重 (kg)</label>
-                <input
-                  style={inp}
-                  type="tel"
-                  placeholder={`現在: ${goal.target} kg`}
-                  value={goalTarget}
-                  onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))}
+                <input style={inp} type="tel" placeholder={`現在: ${goal.target} kg`}
+                  value={goalTarget} onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))}
                   onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-                />
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
               </div>
               <div>
                 <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>1日カロリー上限 (kcal)</label>
-                <input
-                  style={inp}
-                  type="tel"
-                  placeholder={`現在: ${goal.calLimit} kcal`}
-                  value={goalCalInput}
-                  onChange={(e) => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))}
+                <input style={inp} type="tel" placeholder={`現在: ${goal.calLimit} kcal`}
+                  value={goalCalInput} onChange={(e) => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))}
                   onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-                />
+                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
               </div>
               <button onClick={saveGoal} style={btn("#C77DFF")}>💾 保存する</button>
             </div>
