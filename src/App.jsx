@@ -1,4 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+function calcStepCalories(steps, weight) {
+  return Math.round(weight * steps * 0.0005 * 10) / 10;
+}
+
 
 const TABS = ["🏠", "🍽", "🏃", "⚖️", "📝", "🎯"];
 const TAB_LABELS = ["ホーム", "食事", "運動", "体重", "メモ", "目標"];
@@ -156,6 +160,8 @@ export default function App() {
   const [fastActive, setFastActive] = useState(false);
   const [fastElapsed, setFastElapsed] = useState(0);
   const [fastGoal, setFastGoal] = useState(16);
+  const [fastStartTime, setFastStartTime] = useState(null);
+const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -184,6 +190,9 @@ export default function App() {
       setFastStartTime(Date.now()); setFastActive(true);
     }
   };
+  const resetFastTimer = () => {
+  setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
+};
 
   const addMeal = (name, cal) => {
     const n = name || mealName;
@@ -208,6 +217,7 @@ export default function App() {
     }
   };
 
+  
   const addWeight = () => {
     if (!weightInput) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -269,6 +279,8 @@ export default function App() {
                   style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
                 </button>
+            <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 10, border: "1px solid #ddd", background: "#fff", color: "#888", fontSize: 13, cursor: "pointer" }}>🔄 リセット</button>
+                
               </div>
             </div>
           </div>

@@ -1,0 +1,21 @@
+            <div style={sec}>⏱ 断食タイマー</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <FastingRing elapsed={fastElapsed} total={fastGoal * 3600} active={fastActive} />
+              <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#888" }}>目標時間</label>
+                  <select value={fastGoal}
+                    onChange={(e) => { setFastGoal(Number(e.target.value)); setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false); }}
+                    style={{ ...inp, marginTop: 4 }}>
+                    {[12, 14, 16, 18, 20, 24].map((h) => <option key={h} value={h}>{h}時間</option>)}
+                  </select>
+                </div>
+                <button onClick={handleTimerBtn}
+                  style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
+                  {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style={card}>

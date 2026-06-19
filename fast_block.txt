@@ -1,0 +1,19 @@
+
+  const handleTimerBtn = () => {
+    if (fastElapsed >= fastGoal * 3600) {
+      setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
+    } else if (fastActive) {
+      setFastBaseElapsed(fastElapsed); setFastStartTime(null); setFastActive(false);
+    } else {
+      setFastStartTime(Date.now()); setFastActive(true);
+    }
+  };
+
+  const addMeal = (name, cal) => {
+    const n = name || mealName;
+    const c = cal || mealCal;
+    if (!n || !c) return;
+    setMeals([...meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: colors[meals.length % colors.length] }]);
+    setMealName(""); setMealCal("");
+  };
+

@@ -1,0 +1,20 @@
+
+LineNumber Line
+---------- ----
+       160   const [fastActive, setFastActive] = useState(false);
+       161   const [fastElapsed, setFastElapsed] = useState(0);
+       162   const [fastGoal, setFastGoal] = useState(16);
+       166     if (fastActive) {
+       168         setFastElapsed(fastBaseElapsed + Math.floor((Date.now() - fastStartTime) / 1000));
+       174   }, [fastActive, fastStartTime, fastBaseElapsed]);
+       177     saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos });
+       178   }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos]);
+       183     if (fastElapsed >= fastGoal * 3600) {
+       185     } else if (fastActive) {
+       186       setFastBaseElapsed(fastElapsed); setFastStartTime(null); setFastActive(false);
+       263               <FastingRing elapsed={fastElapsed} total={fastGoal * 3600} active={fastActive} />
+       267                   <select value={fastGoal}
+       274                   style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
+       275                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
+
+
