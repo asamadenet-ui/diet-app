@@ -151,74 +151,11 @@ function CalorieCamera({ onAdd }) {
   );
 }
 
-const STORAGE_KEY = "dietapp_v7";
-
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
-}
-
-function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
-}
-
-function calcStepCalories(steps, weight) {
-  return Math.round(weight * 0.035 * steps / 1000 * 10) / 10;
-}
-
-const EXERCISES = [
-  { name: "ウォーキング", met: 3.5, icon: "🚶" },
-  { name: "ジョギング", met: 7.0, icon: "🏃" },
-  { name: "サイクリング", met: 6.0, icon: "🚴" },
-  { name: "水泳", met: 8.0, icon: "🏊" },
-  { name: "筋トレ", met: 5.0, icon: "💪" },
-  { name: "ヨガ", met: 2.5, icon: "🧘" },
-  { name: "ダンス", met: 5.5, icon: "💃" },
-  { name: "その他", met: 4.0, icon: "⚡" },
-];
-
-const MOODS = ["😊 良い", "😐 普通", "😴 疲れた", "😰 体調不良", "💪 絶好調"];
-const CONDITIONS = ["💧 水分OK", "😴 睡眠不足", "🤢 食欲なし", "🔥 やる気あり", "😌 リラックス"];
-
 export default function App() {
   const [tab, setTab] = useState(0);
-  const saved = loadData();
-
-  const [fastGoal, setFastGoal] = useState(saved?.fastGoal || 16);
-  const [fastStartTime, setFastStartTime] = useState(saved?.fastStartTime || null);
-  const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed || 0);
-  const [fastActive, setFastActive] = useState(saved?.fastActive || false);
-  const [fastElapsed, setFastElapsed] = useState(() => {
-    if (saved?.fastActive && saved?.fastStartTime) {
-      return saved.fastBaseElapsed + Math.floor((Date.now() - saved.fastStartTime) / 1000);
-    }
-    return saved?.fastBaseElapsed || 0;
-  });
-
-  const [meals, setMeals] = useState(saved?.meals || []);
-  const [exercises, setExercises] = useState(saved?.exercises || []);
-  const [weights, setWeights] = useState(saved?.weights || []);
-  const [goal, setGoal] = useState(saved?.goal || { target: 60, calLimit: 1800 });
-  const [memos, setMemos] = useState(saved?.memos || []);
-
-  const [mealName, setMealName] = useState("");
-  const [mealCal, setMealCal] = useState("");
-  const [weightInput, setWeightInput] = useState("");
-  const [goalTarget, setGoalTarget] = useState("");
-  const [goalCalInput, setGoalCalInput] = useState("");
-  const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
-  const [exerciseMinutes, setExerciseMinutes] = useState("");
-  const [stepsInput, setStepsInput] = useState("");
-  const [memoText, setMemoText] = useState("");
-  const [memoMood, setMemoMood] = useState(MOODS[0]);
-  const [memoCondition, setMemoCondition] = useState(CONDITIONS[0]);
-  const [memoType, setMemoType] = useState("日記");
-
+  const [fastActive, setFastActive] = useState(false);
+  const [fastElapsed, setFastElapsed] = useState(0);
+  const [fastGoal, setFastGoal] = useState(16);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -283,18 +220,8 @@ export default function App() {
     setGoalTarget(""); setGoalCalInput("");
   };
 
-  const addMemo = () => {
-    if (!memoText.trim()) return;
-    setMemos([{ id: Date.now(), type: memoType, text: memoText.trim(), mood: memoMood, condition: memoCondition, date: new Date().toLocaleDateString("ja-JP"), time: new Date().toTimeString().slice(0, 5) }, ...memos]);
-    setMemoText("");
-  };
-
-  const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
-  const totalCal = meals.reduce((s, m) => s + m.cal, 0);
-  const totalBurned = exercises.reduce((s, e) => s + e.burned, 0);
-  const netCal = totalCal - totalBurned;
-  const weightLeft = latestWeight ? (latestWeight - goal.target).toFixed(1) : "−";
-  const calPct = Math.min((netCal / goal.calLimit) * 100, 100);
+  const weightLeft = (goal.current - goal.target).toFixed(1);
+  const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
 
   const inp = {
     border: "2px solid #E0E0E0", borderRadius: 12, padding: "16px",
@@ -311,7 +238,6 @@ export default function App() {
   const card = { background: "#fff", borderRadius: 20, padding: 20, margin: "16px 16px 0", boxShadow: "0 4px 16px rgba(0,0,0,0.07)" };
   const sec = { fontSize: 12, fontWeight: "bold", color: "#888", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
   const tag = (c) => ({ background: c + "22", color: c, borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: "bold", whiteSpace: "nowrap" });
-  const memoTypeColors = { "日記": "#C77DFF", "食事メモ": "#FF6B6B", "体調メモ": "#4D96FF" };
 
   return (
     <div style={{ fontFamily: "'Segoe UI','Hiragino Sans',sans-serif", background: "#FFF9F0", minHeight: "100vh", maxWidth: 480, margin: "0 auto" }}>
@@ -323,6 +249,8 @@ export default function App() {
       </div>
 
       <div style={{ paddingBottom: 90 }}>
+
+        {/* ホーム */}
         {tab === 0 && <>
           <div style={card}>
             <div style={sec}>⏱ 断食タイマー</div>
@@ -344,6 +272,7 @@ export default function App() {
               </div>
             </div>
           </div>
+
           <div style={card}>
             <div style={sec}>🍽 カロリーバランス</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
@@ -370,6 +299,7 @@ export default function App() {
             </div>
             <div style={{ fontSize: 12, color: "#888", marginTop: 6 }}>目標: {goal.calLimit} kcal</div>
           </div>
+
           <div style={card}>
             <div style={sec}>⚖️ 体重</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -383,16 +313,7 @@ export default function App() {
               </div>
             </div>
           </div>
-          {memos.length > 0 && (
-            <div style={card}>
-              <div style={sec}>📝 今日の一言</div>
-              <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>{memos[0].mood} · {memos[0].condition}</div>
-              <div style={{ fontSize: 14, color: "#2D2D2D", lineHeight: 1.6 }}>{memos[0].text}</div>
-              <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{memos[0].date} {memos[0].time}</div>
-            </div>
-          )}
         </>}
-
         {tab === 1 && <>
           <div style={card}>
             <div style={sec}>📷 写真でカロリー計算</div>
@@ -442,96 +363,15 @@ export default function App() {
             </div>
           </div>
         </>}
-
         {tab === 2 && <>
-          <div style={card}>
-            <div style={sec}>🚶 歩数を記録</div>
-            <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>今日の歩数</label>
-            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 8000"
-              value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))}
-              onFocus={(e) => e.target.style.borderColor = "#6BCB77"}
-              onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
-            {stepsInput && (
-              <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, marginBottom: 12, textAlign: "center" }}>
-                <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
-                <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
-                  {calcStepCalories(Number(stepsInput), latestWeight || 60)} kcal
-                </span>
-              </div>
-            )}
-            <button onClick={addExercise} style={btn("#6BCB77")}>🚶 歩数を追加</button>
-          </div>
-          <div style={card}>
-            <div style={sec}>🏃 運動を記録</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動の種類</label>
-                <select style={inp} value={selectedExercise.name}
-                  onChange={(e) => setSelectedExercise(EXERCISES.find((ex) => ex.name === e.target.value))}>
-                  {EXERCISES.map((ex) => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動時間 (分)</label>
-                <input style={inp} type="tel" placeholder="例: 30"
-                  value={exerciseMinutes} onChange={(e) => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))}
-                  onFocus={(e) => e.target.style.borderColor = "#FF6B6B"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
-              </div>
-              {exerciseMinutes && (
-                <div style={{ background: "#6BCB7715", borderRadius: 12, padding: 12, textAlign: "center" }}>
-                  <span style={{ fontSize: 13, color: "#888" }}>消費カロリー目安: </span>
-                  <span style={{ fontSize: 18, fontWeight: "bold", color: "#6BCB77" }}>
-                    {Math.round(selectedExercise.met * (latestWeight || 60) * Number(exerciseMinutes) / 60)} kcal
-                  </span>
-                </div>
-              )}
-              <button onClick={addExercise} style={btn("#FF6B6B")}>🏃 運動を追加</button>
-            </div>
-          </div>
-          <div style={card}>
-            <div style={sec}>📋 今日の運動</div>
-            {exercises.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだ記録がありません</div>}
-            {exercises.map((e) => (
-              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #F5F5F5" }}>
-                <div>
-                  <div style={{ fontWeight: "bold", fontSize: 14 }}>{e.name}</div>
-                  <div style={{ fontSize: 11, color: "#888" }}>{e.time}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={tag("#6BCB77")}>{e.burned} kcal</span>
-                  <button onClick={() => setExercises(exercises.filter((x) => x.id !== e.id))}
-                    style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 22, padding: "8px 10px", touchAction: "manipulation" }}>×</button>
-                </div>
-              </div>
-            ))}
-            <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
-              <span>合計消費</span><span style={{ color: "#6BCB77" }}>{totalBurned} kcal</span>
-            </div>
-          </div>
-        </>}
-
-        {tab === 3 && <>
           <div style={card}>
             <div style={sec}>📈 体重グラフ</div>
             <WeightGraph entries={weights} />
           </div>
           <div style={card}>
             <div style={sec}>➕ 体重を記録</div>
-            <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>体重 (kg)</label>
-            <input
-              style={{ ...inp, marginBottom: 12 }}
-              type="number"
-              step="0.1"
-              min="0"
-              max="300"
-              placeholder="例: 85.5"
-              value={weightInput}
-              onChange={(e) => setWeightInput(e.target.value)}
-              onFocus={(e) => e.target.style.borderColor = "#4D96FF"}
-              onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-            />
-            <button onClick={addWeight} style={btn("#4D96FF")}>⚖️ 記録する</button>
+            <input style={{ ...inp, marginBottom: 12 }} placeholder="例: 66.5" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^0-9.]/g, ""))} />
+            <button onTouchEnd={(e) => { e.preventDefault(); addWeight(); }} onClick={addWeight} style={btn("#4D96FF")}>⚖️ 記録する</button>
           </div>
           <div style={card}>
             <div style={sec}>📅 履歴</div>
@@ -544,66 +384,7 @@ export default function App() {
             ))}
           </div>
         </>}
-
-        {tab === 4 && <>
-          <div style={card}>
-            <div style={sec}>📝 メモを追加</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["日記", "食事メモ", "体調メモ"].map((t) => (
-                  <button key={t} onClick={() => setMemoType(t)}
-                    style={{ flex: 1, padding: "10px 4px", border: `2px solid ${memoType === t ? memoTypeColors[t] : "#E0E0E0"}`, borderRadius: 12, background: memoType === t ? memoTypeColors[t] + "22" : "#fff", color: memoType === t ? memoTypeColors[t] : "#888", fontWeight: "bold", fontSize: 12, cursor: "pointer", touchAction: "manipulation" }}>
-                    {t}
-                  </button>
-                ))}
-              </div>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>気分</label>
-                <select style={inp} value={memoMood} onChange={(e) => setMemoMood(e.target.value)}>
-                  {MOODS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>体調</label>
-                <select style={inp} value={memoCondition} onChange={(e) => setMemoCondition(e.target.value)}>
-                  {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>メモ</label>
-                <textarea
-                  style={{ ...inp, height: 100, resize: "none", lineHeight: 1.6 }}
-                  placeholder="今日の食事・体調・気づきなど自由に記入..."
-                  value={memoText}
-                  onChange={(e) => setMemoText(e.target.value)}
-                  onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"}
-                />
-              </div>
-              <button onClick={addMemo} style={btn("#C77DFF")}>📝 メモを保存</button>
-            </div>
-          </div>
-          <div style={card}>
-            <div style={sec}>📖 メモ履歴</div>
-            {memos.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだメモがありません</div>}
-            {memos.slice(0, 10).map((m) => (
-              <div key={m.id} style={{ padding: "14px 0", borderBottom: "1px solid #F5F5F5" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <span style={tag(memoTypeColors[m.type] || "#888")}>{m.type}</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 11, color: "#888" }}>{m.date} {m.time}</span>
-                    <button onClick={() => setMemos(memos.filter((x) => x.id !== m.id))}
-                      style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 18, padding: "2px 6px", touchAction: "manipulation" }}>×</button>
-                  </div>
-                </div>
-                <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>{m.mood} · {m.condition}</div>
-                <div style={{ fontSize: 14, color: "#2D2D2D", lineHeight: 1.6 }}>{m.text}</div>
-              </div>
-            ))}
-          </div>
-        </>}
-
-        {tab === 5 && <>
+        {tab === 3 && <>
           <div style={card}>
             <div style={sec}>🎯 現在の目標</div>
             <div style={{ display: "flex", gap: 12 }}>
@@ -623,22 +404,10 @@ export default function App() {
           </div>
           <div style={card}>
             <div style={sec}>✏️ 目標を変更</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>目標体重 (kg)</label>
-                <input style={inp} type="number" step="0.1" placeholder={`現在: ${goal.target} kg`}
-                  value={goalTarget} onChange={(e) => setGoalTarget(e.target.value)}
-                  onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
-              </div>
-              <div>
-                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>1日カロリー上限 (kcal)</label>
-                <input style={inp} type="tel" placeholder={`現在: ${goal.calLimit} kcal`}
-                  value={goalCalInput} onChange={(e) => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))}
-                  onFocus={(e) => e.target.style.borderColor = "#C77DFF"}
-                  onBlur={(e) => e.target.style.borderColor = "#E0E0E0"} />
-              </div>
-              <button onClick={saveGoal} style={btn("#C77DFF")}>💾 保存する</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <input style={inp} placeholder={`目標体重（現在: ${goal.target} kg）`} inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))} />
+              <input style={inp} placeholder={`カロリー上限（現在: ${goal.calLimit} kcal）`} inputMode="numeric" pattern="[0-9]*" value={goalCal} onChange={(e) => setGoalCal(e.target.value.replace(/[^0-9]/g, ""))} />
+              <button onTouchEnd={(e) => { e.preventDefault(); saveGoal(); }} onClick={saveGoal} style={btn("#C77DFF")}>保存する</button>
             </div>
           </div>
           <div style={card}>
@@ -656,7 +425,6 @@ export default function App() {
           </div>
         </>}
       </div>
-
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "#fff", display: "flex", borderTop: "1px solid #F0F0F0", boxShadow: "0 -4px 20px rgba(0,0,0,0.08)", zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
