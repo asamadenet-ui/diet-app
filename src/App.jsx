@@ -154,7 +154,9 @@ function CalorieCamera({ onAdd }) {
     </div>
   );
 }
-
+function saveData(data) {
+  localStorage.setItem("dietAppData", JSON.stringify(data));
+}
 export default function App() {
   const [tab, setTab] = useState(0);
   const [fastActive, setFastActive] = useState(false);
@@ -163,7 +165,12 @@ export default function App() {
   const [fastStartTime, setFastStartTime] = useState(null);
 const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
   const timerRef = useRef(null);
+  const [meals, setMeals] = useState([]);
+const [goal, setGoal] = useState({ current: 0, target: 0, calLimit: 2000 });
+const [exercises, setExercises] = useState([]);
+const [weights, setWeights] = useState([]);
 
+const [memos, setMemos] = useState([]);
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
@@ -229,7 +236,10 @@ const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
     setGoal({ target: goalTarget ? Number(goalTarget) : goal.target, calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit });
     setGoalTarget(""); setGoalCalInput("");
   };
-
+const totalCal = meals.reduce((sum, m) => sum + (m.cal || 0), 0);
+const totalBurned = exercises.reduce((sum, e) => sum + (e.burned || 0), 0);
+const netCal = totalCal - totalBurned;
+const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
   const weightLeft = (goal.current - goal.target).toFixed(1);
   const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
 
