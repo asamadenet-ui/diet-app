@@ -22,6 +22,33 @@ const EXERCISES = [
   { icon: "🏋️", name: "ウォーキング", met: 3.5 },
 ];
 
+const FOOD_CAL_PER_100G = [
+  { name: "白米（炊飯）", cal: 168 }, { name: "玄米（炊飯）", cal: 165 },
+  { name: "食パン", cal: 248 }, { name: "フランスパン", cal: 279 },
+  { name: "うどん（茹で）", cal: 105 }, { name: "そば（茹で）", cal: 132 },
+  { name: "パスタ（茹で）", cal: 165 }, { name: "中華麺（茹で）", cal: 149 },
+  { name: "鶏胸肉（皮なし）", cal: 108 }, { name: "鶏もも肉（皮あり）", cal: 200 },
+  { name: "鶏ささみ", cal: 98 }, { name: "豚ロース", cal: 263 },
+  { name: "豚バラ", cal: 395 }, { name: "牛ロース", cal: 380 },
+  { name: "牛ひき肉", cal: 272 }, { name: "豚ひき肉", cal: 221 },
+  { name: "サーモン", cal: 133 }, { name: "まぐろ（赤身）", cal: 125 },
+  { name: "サバ", cal: 202 }, { name: "鮭", cal: 133 },
+  { name: "えび", cal: 97 }, { name: "ツナ缶（水煮）", cal: 71 },
+  { name: "卵", cal: 151 }, { name: "豆腐（木綿）", cal: 72 },
+  { name: "豆腐（絹ごし）", cal: 56 }, { name: "納豆", cal: 200 },
+  { name: "牛乳", cal: 67 }, { name: "ヨーグルト（無糖）", cal: 62 },
+  { name: "チーズ（プロセス）", cal: 339 }, { name: "バター", cal: 745 },
+  { name: "ブロッコリー", cal: 33 }, { name: "キャベツ", cal: 23 },
+  { name: "ほうれん草", cal: 20 }, { name: "トマト", cal: 19 },
+  { name: "きゅうり", cal: 14 }, { name: "玉ねぎ", cal: 37 },
+  { name: "じゃがいも", cal: 76 }, { name: "さつまいも", cal: 132 },
+  { name: "にんじん", cal: 39 }, { name: "アボカド", cal: 187 },
+  { name: "バナナ", cal: 86 }, { name: "りんご", cal: 54 },
+  { name: "みかん", cal: 46 }, { name: "いちご", cal: 34 },
+  { name: "オートミール", cal: 380 }, { name: "アーモンド", cal: 598 },
+  { name: "くるみ", cal: 674 }, { name: "ピーナッツ", cal: 562 },
+];
+
 const FOOD_DB = [
   { name: "白米（1膳）", cal: 252 }, { name: "おにぎり（1個）", cal: 180 },
   { name: "食パン（1枚）", cal: 158 }, { name: "ラーメン", cal: 500 },
@@ -224,6 +251,9 @@ export default function App() {
   const [memoInput, setMemoInput] = useState("");
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
+  const [mealGrams, setMealGrams] = useState("");
+  const [mealCalPer100g, setMealCalPer100g] = useState(null);
+  const [gramSuggestions, setGramSuggestions] = useState([]);
   const [foodSearch, setFoodSearch] = useState("");
   const [stepsInput, setStepsInput] = useState("");
   const [exerciseMinutes, setExerciseMinutes] = useState("");
@@ -569,9 +599,64 @@ export default function App() {
           <div style={card}>
             <div style={sec}>✏️ MANUAL INPUT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <input style={inp} type="text" placeholder="食事名" value={mealName} onChange={e => setMealName(e.target.value)} />
-              <input style={inp} type="tel" placeholder="カロリー（kcal）" value={mealCal} onChange={e => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
-              <button onClick={() => addMeal()} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
+              {/* 食品名 + グラム計算 */}
+              <div style={{ position: "relative" }}>
+                <input style={inp} type="text" placeholder="食品名（例：鶏胸肉）" value={mealName}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setMealName(v);
+                    setMealCalPer100g(null);
+                    setMealGrams("");
+                    if (v.length >= 1) {
+                      setGramSuggestions(FOOD_CAL_PER_100G.filter(f => f.name.includes(v)).slice(0, 6));
+                    } else {
+                      setGramSuggestions([]);
+                    }
+                  }} />
+                {gramSuggestions.length > 0 && (
+                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: C.card2, border: `1px solid ${C.border}`, borderRadius: 8, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
+                    {gramSuggestions.map((f, i) => (
+                      <div key={i} onClick={() => {
+                        setMealName(f.name);
+                        setMealCalPer100g(f.cal);
+                        setGramSuggestions([]);
+                        setMealCal("");
+                      }} style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
+                        <span style={{ color: C.text, fontSize: 13 }}>{f.name}</span>
+                        <span style={{ color: C.sub, fontSize: 12 }}>{f.cal}kcal/100g</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* グラム入力（食品選択後に表示） */}
+              {mealCalPer100g !== null && (
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input style={{ ...inp, flex: 1 }} type="tel" placeholder="グラム数"
+                    value={mealGrams}
+                    onChange={e => {
+                      const g = e.target.value.replace(/[^0-9.]/g, "");
+                      setMealGrams(g);
+                      if (g) setMealCal(String(Math.round(mealCalPer100g * parseFloat(g) / 100)));
+                      else setMealCal("");
+                    }} />
+                  <span style={{ color: C.sub, fontSize: 12, whiteSpace: "nowrap" }}>g</span>
+                  {mealCal ? (
+                    <span style={{ color: C.orange, fontWeight: "700", fontSize: 16, whiteSpace: "nowrap" }}>{mealCal} kcal</span>
+                  ) : (
+                    <span style={{ color: C.sub, fontSize: 12, whiteSpace: "nowrap" }}>{mealCalPer100g}kcal/100g</span>
+                  )}
+                </div>
+              )}
+              {/* カロリー直接入力（食品未選択 or 上書き） */}
+              <input style={inp} type="tel" placeholder={mealCalPer100g ? "カロリー（自動計算 or 手動修正）" : "カロリー（kcal）"}
+                value={mealCal} onChange={e => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
+              <button onClick={() => {
+                addMeal();
+                setMealGrams("");
+                setMealCalPer100g(null);
+                setGramSuggestions([]);
+              }} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
             </div>
           </div>
 
