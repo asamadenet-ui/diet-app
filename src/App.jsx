@@ -4,6 +4,8 @@ function calcStepCalories(steps, weight) {
   return Math.round(weight * steps * 0.0005 * 10) / 10;
 }
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 const TABS = ["🏠", "🍽", "🏃", "⚖️", "📝", "🎯"];
 const TAB_LABELS = ["HOME", "MEAL", "TRAIN", "WEIGHT", "MEMO", "GOAL"];
 
@@ -16,29 +18,41 @@ const EXERCISES = [
   { icon: "🏋️", name: "ウォーキング", met: 3.5 },
 ];
 
+const FOOD_DB = [
+  { name: "白米（1膳）", cal: 252 }, { name: "おにぎり（1個）", cal: 180 },
+  { name: "食パン（1枚）", cal: 158 }, { name: "ラーメン", cal: 500 },
+  { name: "チャーハン", cal: 600 }, { name: "カレーライス", cal: 700 },
+  { name: "パスタ", cal: 430 }, { name: "唐揚げ（3個）", cal: 300 },
+  { name: "サラダチキン", cal: 120 }, { name: "ゆで卵（1個）", cal: 80 },
+  { name: "鶏胸肉（100g）", cal: 108 }, { name: "サーモン（100g）", cal: 133 },
+  { name: "豆腐（1丁）", cal: 168 }, { name: "ブロッコリー（100g）", cal: 33 },
+  { name: "バナナ（1本）", cal: 86 }, { name: "りんご（1個）", cal: 138 },
+  { name: "牛乳（200ml）", cal: 134 }, { name: "ヨーグルト", cal: 100 },
+  { name: "プロテイン", cal: 120 }, { name: "味噌汁", cal: 40 },
+  { name: "ハンバーガー", cal: 450 }, { name: "コーヒー（無糖）", cal: 5 },
+];
+
 const C = {
-  bg: "#0A0A0A",
-  card: "#141414",
-  card2: "#1A1A1A",
-  border: "#2A2A2A",
-  orange: "#FF6B00",
-  red: "#FF3D3D",
-  green: "#00E676",
-  blue: "#00B4FF",
-  purple: "#B44FFF",
-  text: "#FFFFFF",
-  sub: "#888888",
-  sub2: "#555555",
+  bg: "#0A0A0A", card: "#141414", card2: "#1A1A1A", border: "#2A2A2A",
+  orange: "#FF6B00", red: "#FF3D3D", green: "#00E676", blue: "#00B4FF",
+  purple: "#B44FFF", yellow: "#FFD700", text: "#FFFFFF", sub: "#888888", sub2: "#444444",
 };
 
-function saveData(data) {
-  localStorage.setItem("dietAppData", JSON.stringify(data));
-}
+function saveData(data) { localStorage.setItem("dietAppData", JSON.stringify(data)); }
 function loadData() {
-  try {
-    const raw = localStorage.getItem("dietAppData");
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  try { const r = localStorage.getItem("dietAppData"); return r ? JSON.parse(r) : null; }
+  catch { return null; }
+}
+
+function sportBtn(color, ex = {}) {
+  return {
+    background: `linear-gradient(135deg, ${color}, ${color}CC)`,
+    color: "#fff", border: "none", borderRadius: 12,
+    padding: "16px 20px", fontWeight: "800", fontSize: 15, cursor: "pointer",
+    touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+    display: "block", width: "100%", letterSpacing: 0.5,
+    boxShadow: `0 4px 20px ${color}44`, ...ex,
+  };
 }
 
 function WeightGraph({ entries }) {
@@ -89,10 +103,10 @@ function FastingRing({ elapsed, total, active }) {
   return (
     <svg viewBox="0 0 180 180" style={{ width: 160 }}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={C.border} strokeWidth="12" />
-      <circle cx={cx} cy={cy} r={r} fill="none"
-        stroke={color} strokeWidth="12"
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="12"
         strokeDasharray={`${dash} ${circumference}`} strokeLinecap="round"
-        transform={`rotate(-90 ${cx} ${cy})`} style={{ transition: "stroke-dasharray 0.5s", filter: active ? `drop-shadow(0 0 8px ${color})` : "none" }} />
+        transform={`rotate(-90 ${cx} ${cy})`}
+        style={{ transition: "stroke-dasharray 0.5s", filter: active ? `drop-shadow(0 0 8px ${color})` : "none" }} />
       <text x={cx} y={cy - 8} textAnchor="middle" fontSize="22" fontWeight="bold" fill={C.text}>{fmt(elapsed)}</text>
       <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill={color} fontWeight="bold">
         {progress >= 1 ? "COMPLETE!" : active ? "FASTING" : "PAUSED"}
@@ -102,7 +116,7 @@ function FastingRing({ elapsed, total, active }) {
   );
 }
 
-function CalorieCamera({ onAdd }) {
+function CalorieCamera({ onAdd, apiKey }) {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -119,32 +133,31 @@ function CalorieCamera({ onAdd }) {
 
   const analyze = async () => {
     if (!image) return;
+    if (!apiKey) { setError("APIキーを「GOALタブ > 設定」に入力してください。"); return; }
     setLoading(true); setError(null);
     try {
       const base64 = image.split(",")[1];
       const mediaType = image.split(";")[0].split(":")[1];
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
-              { type: "text", text: "この食事の写真を見て、料理名とカロリーを推定してください。必ず以下のJSON形式のみで返答してください（他のテキストは不要）：{\"name\":\"料理名\",\"calories\":数値,\"description\":\"簡単な説明\"}" }
-            ]
-          }]
+          model: "claude-sonnet-4-6", max_tokens: 500,
+          messages: [{ role: "user", content: [
+            { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+            { type: "text", text: "この食事のカロリーをJSON形式のみで返してください：{\"name\":\"料理名\",\"calories\":数値,\"description\":\"説明\"}" }
+          ]}]
         })
       });
       const data = await response.json();
-      const text = data.content[0].text;
-      const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
+      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, "").trim());
       setResult(parsed);
-    } catch {
-      setError("解析に失敗しました。もう一度試してください。");
-    }
+    } catch { setError("解析失敗。もう一度お試しください。"); }
     setLoading(false);
   };
 
@@ -152,16 +165,13 @@ function CalorieCamera({ onAdd }) {
     <div>
       <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display: "none" }} />
       <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-        <button onClick={() => { fileRef.current.removeAttribute("capture"); fileRef.current.click(); }}
-          style={sportBtn(C.red, { flex: 1 })}>📁 アルバム</button>
-        <button onClick={() => { fileRef.current.setAttribute("capture", "environment"); fileRef.current.click(); }}
-          style={sportBtn(C.blue, { flex: 1 })}>📷 カメラ</button>
+        <button onClick={() => { fileRef.current.removeAttribute("capture"); fileRef.current.click(); }} style={sportBtn(C.red, { flex: 1 })}>📁 アルバム</button>
+        <button onClick={() => { fileRef.current.setAttribute("capture", "environment"); fileRef.current.click(); }} style={sportBtn(C.blue, { flex: 1 })}>📷 カメラ</button>
       </div>
       {image && (
         <div style={{ marginBottom: 12 }}>
           <img src={image} alt="食事" style={{ width: "100%", borderRadius: 12, maxHeight: 200, objectFit: "cover" }} />
-          <button onClick={() => { if (!loading) analyze(); }} disabled={loading}
-            style={sportBtn(loading ? C.sub2 : C.green, { marginTop: 10 })}>
+          <button onClick={() => { if (!loading) analyze(); }} disabled={loading} style={sportBtn(loading ? C.sub2 : C.green, { marginTop: 10 })}>
             {loading ? "⚡ AI解析中..." : "⚡ AIでカロリーを計算"}
           </button>
         </div>
@@ -170,90 +180,112 @@ function CalorieCamera({ onAdd }) {
       {result && (
         <div style={{ background: C.card2, border: `1px solid ${C.green}44`, borderRadius: 12, padding: 16, marginTop: 8 }}>
           <div style={{ fontSize: 11, color: C.green, marginBottom: 4, fontWeight: "bold", letterSpacing: 1 }}>AI ANALYSIS</div>
-          <div style={{ fontWeight: "bold", fontSize: 18, marginBottom: 4, color: C.text }}>{result.name}</div>
+          <div style={{ fontWeight: "bold", fontSize: 18, marginBottom: 4 }}>{result.name}</div>
           <div style={{ fontSize: 13, color: C.sub, marginBottom: 12 }}>{result.description}</div>
-          <div style={{ fontSize: 40, fontWeight: "900", color: C.green, marginBottom: 12, letterSpacing: -1 }}>
-            {result.calories}<span style={{ fontSize: 16, fontWeight: "normal", color: C.sub }}> kcal</span>
+          <div style={{ fontSize: 40, fontWeight: "900", color: C.green, marginBottom: 12 }}>
+            {result.calories}<span style={{ fontSize: 14, fontWeight: "normal", color: C.sub }}> kcal</span>
           </div>
-          <button onClick={() => { onAdd(result.name, result.calories); setImage(null); setResult(null); }}
-            style={sportBtn(C.orange)}>✅ 食事記録に追加</button>
+          <button onClick={() => { onAdd(result.name, result.calories); setImage(null); setResult(null); }} style={sportBtn(C.orange)}>✅ 追加する</button>
         </div>
       )}
     </div>
   );
 }
 
-function sportBtn(color, ex = {}) {
-  return {
-    background: `linear-gradient(135deg, ${color}, ${color}CC)`,
-    color: "#fff", border: "none", borderRadius: 12,
-    padding: "16px 20px", fontWeight: "800", fontSize: 15, cursor: "pointer",
-    touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
-    display: "block", width: "100%", letterSpacing: 0.5,
-    boxShadow: `0 4px 20px ${color}44`,
-    ...ex,
-  };
-}
-
 export default function App() {
   const saved = loadData();
   const [tab, setTab] = useState(0);
+  const [currentDate, setCurrentDate] = useState(TODAY);
+  const [days, setDays] = useState(saved?.days ?? {});
   const [fastActive, setFastActive] = useState(saved?.fastActive ?? false);
   const [fastElapsed, setFastElapsed] = useState(saved?.fastElapsed ?? 0);
   const [fastGoal, setFastGoal] = useState(saved?.fastGoal ?? 16);
   const [fastStartTime, setFastStartTime] = useState(null);
   const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed ?? 0);
+  const [fastNotified, setFastNotified] = useState(false);
   const timerRef = useRef(null);
-  const [meals, setMeals] = useState(saved?.meals ?? []);
+  const [goal, setGoal] = useState(saved?.goal ?? { target: 60, calLimit: 2000, height: 170 });
+  const [weights, setWeights] = useState(saved?.weights ?? []);
+  const [goalTarget, setGoalTarget] = useState("");
+  const [goalCalInput, setGoalCalInput] = useState("");
+  const [goalHeight, setGoalHeight] = useState("");
+  const [memos, setMemos] = useState(saved?.memos ?? []);
+  const [memoInput, setMemoInput] = useState("");
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
-  const [goal, setGoal] = useState(saved?.goal ?? { current: 0, target: 0, calLimit: 2000 });
-  const [exercises, setExercises] = useState(saved?.exercises ?? []);
+  const [foodSearch, setFoodSearch] = useState("");
   const [stepsInput, setStepsInput] = useState("");
   const [exerciseMinutes, setExerciseMinutes] = useState("");
   const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
-  const [weights, setWeights] = useState(saved?.weights ?? []);
   const [weightInput, setWeightInput] = useState("");
-  const [goalTarget, setGoalTarget] = useState("");
-  const [goalCalInput, setGoalCalInput] = useState("");
-  const [memos, setMemos] = useState(saved?.memos ?? []);
-  const [memoInput, setMemoInput] = useState("");
+  const [apiKey, setApiKey] = useState(localStorage.getItem("anthropicKey") ?? "");
+  const [aiAdvice, setAiAdvice] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const getDayData = (date) => days[date] ?? { meals: [], exercises: [], water: 0 };
+  const dayData = getDayData(currentDate);
+  const updateDay = (updater) => {
+    setDays(prev => ({ ...prev, [currentDate]: updater(getDayData(currentDate)) }));
+  };
+
+  const isToday = currentDate === TODAY;
+  const prevDate = () => {
+    const d = new Date(currentDate); d.setDate(d.getDate() - 1);
+    setCurrentDate(d.toISOString().slice(0, 10));
+  };
+  const nextDate = () => {
+    const d = new Date(currentDate); d.setDate(d.getDate() + 1);
+    const next = d.toISOString().slice(0, 10);
+    if (next <= TODAY) setCurrentDate(next);
+  };
 
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
-        setFastElapsed(fastBaseElapsed + Math.floor((Date.now() - fastStartTime) / 1000));
+        const elapsed = fastBaseElapsed + Math.floor((Date.now() - fastStartTime) / 1000);
+        setFastElapsed(elapsed);
+        if (elapsed >= fastGoal * 3600 && !fastNotified) {
+          setFastNotified(true);
+          if (Notification.permission === "granted") {
+            new Notification("🎉 断食完了！", { body: `${fastGoal}時間の断食を達成しました！`, icon: "/favicon.ico" });
+          }
+        }
       }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
+    } else { clearInterval(timerRef.current); }
     return () => clearInterval(timerRef.current);
-  }, [fastActive, fastStartTime, fastBaseElapsed]);
+  }, [fastActive, fastStartTime, fastBaseElapsed, fastGoal, fastNotified]);
 
   useEffect(() => {
-    saveData({ fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos });
-  }, [fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, meals, exercises, weights, goal, memos]);
+    saveData({ days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos });
+  }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos]);
+
+  const requestNotificationPermission = async () => {
+    if (Notification.permission === "default") await Notification.requestPermission();
+  };
 
   const mealColors = [C.orange, C.green, C.blue, C.purple, C.red];
 
   const handleTimerBtn = () => {
     if (fastElapsed >= fastGoal * 3600) {
-      setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
+      setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false); setFastNotified(false);
     } else if (fastActive) {
       setFastBaseElapsed(fastElapsed); setFastStartTime(null); setFastActive(false);
     } else {
+      requestNotificationPermission();
       setFastStartTime(Date.now()); setFastActive(true);
     }
   };
   const resetFastTimer = () => {
-    setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
+    setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false); setFastNotified(false);
   };
 
   const addMeal = (name, cal) => {
-    const n = name || mealName;
-    const c = cal || mealCal;
+    const n = name || mealName; const c = cal || mealCal;
     if (!n || !c) return;
-    setMeals([...meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: mealColors[meals.length % mealColors.length] }]);
+    updateDay(day => ({
+      ...day,
+      meals: [...day.meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: mealColors[day.meals.length % mealColors.length] }]
+    }));
     setMealName(""); setMealCal("");
   };
 
@@ -262,20 +294,22 @@ export default function App() {
     if (stepsInput) {
       const steps = Number(stepsInput);
       const burned = calcStepCalories(steps, w);
-      setExercises([...exercises, { id: Date.now(), name: `🚶 歩数: ${steps.toLocaleString()}歩`, burned, time: new Date().toTimeString().slice(0, 5) }]);
+      updateDay(day => ({ ...day, exercises: [...day.exercises, { id: Date.now(), name: `🚶 ${steps.toLocaleString()}歩`, burned, time: new Date().toTimeString().slice(0, 5) }] }));
       setStepsInput("");
     } else if (exerciseMinutes) {
       const mins = Number(exerciseMinutes);
       const burned = Math.round(selectedExercise.met * w * mins / 60);
-      setExercises([...exercises, { id: Date.now(), name: `${selectedExercise.icon} ${selectedExercise.name} ${mins}分`, burned, time: new Date().toTimeString().slice(0, 5) }]);
+      updateDay(day => ({ ...day, exercises: [...day.exercises, { id: Date.now(), name: `${selectedExercise.icon} ${selectedExercise.name} ${mins}分`, burned, time: new Date().toTimeString().slice(0, 5) }] }));
       setExerciseMinutes("");
     }
   };
 
+  const addWater = (ml) => updateDay(day => ({ ...day, water: (day.water || 0) + ml }));
+  const resetWater = () => updateDay(day => ({ ...day, water: 0 }));
+
   const addWeight = () => {
     if (!weightInput) return;
-    const today = new Date().toISOString().slice(0, 10);
-    setWeights([...weights.filter((w) => w.date !== today), { date: today, weight: Number(weightInput) }].sort((a, b) => a.date.localeCompare(b.date)));
+    setWeights([...weights.filter((w) => w.date !== currentDate), { date: currentDate, weight: Number(weightInput) }].sort((a, b) => a.date.localeCompare(b.date)));
     setWeightInput("");
   };
 
@@ -286,16 +320,79 @@ export default function App() {
   };
 
   const saveGoal = () => {
-    setGoal({ target: goalTarget ? Number(goalTarget) : goal.target, calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit });
-    setGoalTarget(""); setGoalCalInput("");
+    setGoal({
+      target: goalTarget ? Number(goalTarget) : goal.target,
+      calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit,
+      height: goalHeight ? Number(goalHeight) : goal.height,
+    });
+    setGoalTarget(""); setGoalCalInput(""); setGoalHeight("");
   };
 
-  const totalCal = meals.reduce((sum, m) => sum + (m.cal || 0), 0);
-  const totalBurned = exercises.reduce((sum, e) => sum + (e.burned || 0), 0);
+  const saveApiKey = (key) => { setApiKey(key); localStorage.setItem("anthropicKey", key); };
+
+  const exportCSV = () => {
+    const rows = [["日付", "種類", "名前", "カロリー/数値"]];
+    Object.entries(days).sort().forEach(([date, day]) => {
+      (day.meals || []).forEach(m => rows.push([date, "食事", m.name, m.cal]));
+      (day.exercises || []).forEach(e => rows.push([date, "運動", e.name, e.burned]));
+      (day.water ? [[date, "水分", "水分摂取", day.water]] : []).forEach(r => rows.push(r));
+    });
+    weights.forEach(w => rows.push([w.date, "体重", "体重", w.weight]));
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "diet_data.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getAIAdvice = async () => {
+    if (!apiKey) { setAiAdvice(["APIキーをこのページ下部の設定に入力してください。"]); return; }
+    setAiLoading(true);
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json", "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6", max_tokens: 600,
+          messages: [{ role: "user", content: `ダイエットデータを分析して日本語でアドバイス3つをJSONで。
+今日の摂取: ${totalCal}kcal / 消費: ${totalBurned}kcal / 上限: ${goal.calLimit}kcal
+体重: ${latestWeight ?? "未記録"}kg / 目標: ${goal.target}kg / BMI: ${bmi}
+水分: ${todayWater}ml
+JSON形式: {"advice":["アドバイス1","アドバイス2","アドバイス3"]}` }]
+        })
+      });
+      const data = await response.json();
+      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, "").trim());
+      setAiAdvice(parsed.advice);
+    } catch { setAiAdvice(["アドバイスの取得に失敗しました。"]); }
+    setAiLoading(false);
+  };
+
+  const totalCal = dayData.meals.reduce((s, m) => s + (m.cal || 0), 0);
+  const totalBurned = dayData.exercises.reduce((s, e) => s + (e.burned || 0), 0);
   const netCal = totalCal - totalBurned;
+  const todayWater = dayData.water || 0;
   const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
   const weightLeft = (latestWeight !== null ? latestWeight - goal.target : 0).toFixed(1);
   const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
+  const bmi = latestWeight ? (latestWeight / Math.pow(goal.height / 100, 2)).toFixed(1) : null;
+  const bmiLabel = !bmi ? "−" : bmi < 18.5 ? "低体重" : bmi < 25 ? "普通" : bmi < 30 ? "肥満①" : "肥満②";
+  const bmiColor = !bmi ? C.sub : bmi < 18.5 ? C.blue : bmi < 25 ? C.green : bmi < 30 ? C.orange : C.red;
+  const waterPct = Math.min((todayWater / 2000) * 100, 100);
+
+  const filteredFoods = FOOD_DB.filter(f => f.name.includes(foodSearch));
+
+  const ACHIEVEMENTS = [
+    { icon: "🍽", label: "初記録", done: Object.values(days).some(d => d.meals?.length > 0) },
+    { icon: "💧", label: "水分2L", done: Object.values(days).some(d => (d.water || 0) >= 2000) },
+    { icon: "🏆", label: "目標達成", done: latestWeight && goal.target && latestWeight <= goal.target },
+    { icon: "⚡", label: "断食完了", done: fastNotified },
+    { icon: "📅", label: "3日記録", done: weights.length >= 3 },
+    { icon: "✅", label: "カロリー管理", done: Object.values(days).some(d => d.meals?.length > 0 && d.meals.reduce((s, m) => s + m.cal, 0) <= goal.calLimit) },
+  ];
 
   const inp = {
     border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px",
@@ -303,44 +400,37 @@ export default function App() {
     fontFamily: "inherit", backgroundColor: C.card2, color: C.text,
     WebkitAppearance: "none", appearance: "none", display: "block",
   };
-  const card = {
-    background: C.card, borderRadius: 16, padding: 20,
-    margin: "12px 14px 0", border: `1px solid ${C.border}`,
-  };
-  const sec = {
-    fontSize: 11, fontWeight: "900", color: C.sub, marginBottom: 14,
-    letterSpacing: 2, textTransform: "uppercase",
-  };
-  const badge = (c) => ({
-    background: `${c}22`, color: c, borderRadius: 8, padding: "4px 10px",
-    fontSize: 12, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44`,
-  });
-  const statBox = (c) => ({
-    flex: 1, background: `${c}0D`, borderRadius: 12, padding: 12,
-    textAlign: "center", border: `1px solid ${c}33`,
-  });
+  const card = { background: C.card, borderRadius: 16, padding: 20, margin: "12px 14px 0", border: `1px solid ${C.border}` };
+  const sec = { fontSize: 11, fontWeight: "900", color: C.sub, marginBottom: 14, letterSpacing: 2, textTransform: "uppercase" };
+  const badge = (c) => ({ background: `${c}22`, color: c, borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44` });
+  const statBox = (c) => ({ flex: 1, background: `${c}0D`, borderRadius: 12, padding: 12, textAlign: "center", border: `1px solid ${c}33` });
+
+  const dateLabel = currentDate === TODAY ? "今日" : currentDate.slice(5).replace("-", "/");
 
   return (
     <div style={{ fontFamily: "'Segoe UI','Hiragino Sans',sans-serif", background: C.bg, minHeight: "100vh", maxWidth: 480, margin: "0 auto", color: C.text }}>
 
       {/* ヘッダー */}
-      <div style={{ background: `linear-gradient(135deg, #1A0A00, #0A0A0A)`, borderBottom: `1px solid ${C.border}`, padding: "18px 20px 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "linear-gradient(135deg,#1A0A00,#0A0A0A)", borderBottom: `1px solid ${C.border}`, padding: "16px 20px 14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 11, color: C.orange, fontWeight: "900", letterSpacing: 3, marginBottom: 2 }}>DIET TRACKER</div>
-            <div style={{ fontSize: 22, fontWeight: "900", letterSpacing: -0.5 }}>💪 MY FITNESS</div>
+            <div style={{ fontSize: 10, color: C.orange, fontWeight: "900", letterSpacing: 3, marginBottom: 2 }}>DIET TRACKER</div>
+            <div style={{ fontSize: 20, fontWeight: "900" }}>💪 MY FITNESS</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: C.sub }}>{new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" })}</div>
-            <div style={{ fontSize: 28, fontWeight: "900", color: calPct > 80 ? C.red : C.orange, marginTop: 2 }}>{Math.round(calPct)}<span style={{ fontSize: 12, fontWeight: "normal", color: C.sub }}>%</span></div>
+            <div style={{ fontSize: 28, fontWeight: "900", color: calPct > 80 ? C.red : C.orange }}>{Math.round(calPct)}<span style={{ fontSize: 11, color: C.sub }}>%</span></div>
+            <div style={{ fontSize: 10, color: C.sub }}>{totalCal} / {goal.calLimit} kcal</div>
           </div>
         </div>
-        {/* カロリープログレス */}
-        <div style={{ marginTop: 14, background: C.border, borderRadius: 6, height: 6, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${Math.max(0, calPct)}%`, background: calPct > 80 ? `linear-gradient(90deg,${C.orange},${C.red})` : `linear-gradient(90deg,${C.green},${C.orange})`, borderRadius: 6, transition: "width 0.5s", boxShadow: calPct > 80 ? `0 0 8px ${C.red}` : `0 0 8px ${C.orange}` }} />
+        {/* 日付ナビ */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 10 }}>
+          <button onClick={prevDate} style={{ background: "none", border: `1px solid ${C.border}`, color: C.sub, borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 16 }}>‹</button>
+          <div style={{ fontSize: 14, fontWeight: "800", color: isToday ? C.orange : C.text, minWidth: 80, textAlign: "center" }}>{dateLabel}</div>
+          <button onClick={nextDate} disabled={isToday} style={{ background: "none", border: `1px solid ${C.border}`, color: isToday ? C.sub2 : C.sub, borderRadius: 8, padding: "4px 12px", cursor: isToday ? "default" : "pointer", fontSize: 16 }}>›</button>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: C.sub }}>
-          <span>{totalCal} kcal 摂取</span><span>上限 {goal.calLimit} kcal</span>
+        {/* カロリーバー */}
+        <div style={{ background: C.border, borderRadius: 6, height: 5, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${Math.max(0, calPct)}%`, background: calPct > 80 ? `linear-gradient(90deg,${C.orange},${C.red})` : `linear-gradient(90deg,${C.green},${C.orange})`, borderRadius: 6, transition: "width 0.5s", boxShadow: `0 0 8px ${calPct > 80 ? C.red : C.orange}` }} />
         </div>
       </div>
 
@@ -354,15 +444,12 @@ export default function App() {
               <FastingRing elapsed={fastElapsed} total={fastGoal * 3600} active={fastActive} />
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, color: C.sub, marginBottom: 6 }}>TARGET</div>
-                  <select value={fastGoal}
-                    onChange={(e) => { setFastGoal(Number(e.target.value)); setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false); }}
-                    style={inp}>
-                    {[12, 14, 16, 18, 20, 24].map((h) => <option key={h} value={h}>{h}h</option>)}
+                  <div style={{ fontSize: 10, color: C.sub, marginBottom: 6 }}>TARGET</div>
+                  <select value={fastGoal} onChange={(e) => { setFastGoal(Number(e.target.value)); resetFastTimer(); }} style={inp}>
+                    {[12, 14, 16, 18, 20, 24].map(h => <option key={h} value={h}>{h}h</option>)}
                   </select>
                 </div>
-                <button onClick={handleTimerBtn}
-                  style={sportBtn(fastElapsed >= fastGoal * 3600 ? C.green : fastActive ? C.red : C.orange)}>
+                <button onClick={handleTimerBtn} style={sportBtn(fastElapsed >= fastGoal * 3600 ? C.green : fastActive ? C.red : C.orange)}>
                   {fastElapsed >= fastGoal * 3600 ? "🏆 RESET" : fastActive ? "⏸ STOP" : "▶ START"}
                 </button>
                 <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 12, cursor: "pointer" }}>🔄 RESET</button>
@@ -372,38 +459,58 @@ export default function App() {
 
           <div style={card}>
             <div style={sec}>🔥 CALORIE BALANCE</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <div style={statBox(C.red)}>
                 <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>摂取</div>
-                <div style={{ fontSize: 26, fontWeight: "900", color: C.red, letterSpacing: -1 }}>{totalCal}</div>
+                <div style={{ fontSize: 26, fontWeight: "900", color: C.red }}>{totalCal}</div>
                 <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 18, fontWeight: "bold" }}>−</div>
+              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 18 }}>−</div>
               <div style={statBox(C.green)}>
                 <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>消費</div>
-                <div style={{ fontSize: 26, fontWeight: "900", color: C.green, letterSpacing: -1 }}>{totalBurned}</div>
+                <div style={{ fontSize: 26, fontWeight: "900", color: C.green }}>{totalBurned}</div>
                 <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 18, fontWeight: "bold" }}>=</div>
+              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 18 }}>=</div>
               <div style={statBox(C.blue)}>
                 <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>正味</div>
-                <div style={{ fontSize: 26, fontWeight: "900", color: C.blue, letterSpacing: -1 }}>{netCal}</div>
+                <div style={{ fontSize: 26, fontWeight: "900", color: C.blue }}>{netCal}</div>
                 <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
               </div>
             </div>
           </div>
 
+          {/* 水分記録 */}
           <div style={card}>
-            <div style={sec}>⚖️ CURRENT WEIGHT</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={sec}>💧 WATER INTAKE</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div>
-                <span style={{ fontSize: 48, fontWeight: "900", color: C.text, letterSpacing: -2 }}>{latestWeight || "−"}</span>
-                <span style={{ fontSize: 16, color: C.sub }}> kg</span>
+                <span style={{ fontSize: 36, fontWeight: "900", color: C.blue }}>{todayWater}</span>
+                <span style={{ fontSize: 13, color: C.sub }}> ml</span>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={badge(C.purple)}>あと {weightLeft} kg</div>
-                <div style={{ fontSize: 11, color: C.sub, marginTop: 6 }}>目標 {goal.target} kg</div>
-              </div>
+              <div style={badge(waterPct >= 100 ? C.green : C.blue)}>{Math.round(waterPct)}% / 2000ml</div>
+            </div>
+            <div style={{ background: C.border, borderRadius: 6, height: 8, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ height: "100%", width: `${waterPct}%`, background: `linear-gradient(90deg,${C.blue},${C.green})`, borderRadius: 6, transition: "width 0.5s", boxShadow: `0 0 8px ${C.blue}` }} />
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[100, 200, 500].map(ml => (
+                <button key={ml} onClick={() => addWater(ml)} style={sportBtn(C.blue, { flex: 1, padding: "12px 8px", fontSize: 13 })}>+{ml}ml</button>
+              ))}
+              <button onClick={resetWater} style={{ flex: 1, padding: "12px 8px", background: "none", border: `1px solid ${C.border}`, borderRadius: 12, color: C.sub, fontSize: 12, cursor: "pointer" }}>リセット</button>
+            </div>
+          </div>
+
+          {/* バッジ */}
+          <div style={card}>
+            <div style={sec}>🏅 ACHIEVEMENTS</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {ACHIEVEMENTS.map((a, i) => (
+                <div key={i} style={{ background: a.done ? `${C.yellow}22` : C.card2, border: `1px solid ${a.done ? C.yellow : C.border}`, borderRadius: 12, padding: "10px 14px", textAlign: "center", minWidth: 80, flex: 1, opacity: a.done ? 1 : 0.4, filter: a.done ? `drop-shadow(0 0 6px ${C.yellow})` : "none" }}>
+                  <div style={{ fontSize: 22 }}>{a.icon}</div>
+                  <div style={{ fontSize: 10, color: a.done ? C.yellow : C.sub, fontWeight: "800", marginTop: 4 }}>{a.label}</div>
+                </div>
+              ))}
             </div>
           </div>
         </>}
@@ -412,25 +519,40 @@ export default function App() {
         {tab === 1 && <>
           <div style={card}>
             <div style={sec}>📷 AI CALORIE SCAN</div>
-            <CalorieCamera onAdd={(name, cal) => addMeal(name, cal)} />
+            <CalorieCamera onAdd={(name, cal) => addMeal(name, cal)} apiKey={apiKey} />
           </div>
+
+          {/* 食品DB */}
+          <div style={card}>
+            <div style={sec}>🍱 FOOD DATABASE</div>
+            <input style={{ ...inp, marginBottom: 10 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => setFoodSearch(e.target.value)} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 180, overflowY: "auto" }}>
+              {filteredFoods.map((f, i) => (
+                <button key={i} onClick={() => addMeal(f.name, f.cal)}
+                  style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 12, cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ fontWeight: "700" }}>{f.name}</span>
+                  <span style={{ color: C.orange, fontSize: 11, marginLeft: 6 }}>{f.cal}kcal</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={card}>
             <div style={sec}>✏️ MANUAL INPUT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <input style={inp} type="text" placeholder="食事名（例：チキンサラダ）"
-                value={mealName} onChange={(e) => setMealName(e.target.value)} />
-              <input style={inp} type="tel" placeholder="カロリー（例：420）"
-                value={mealCal} onChange={(e) => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
+              <input style={inp} type="text" placeholder="食事名" value={mealName} onChange={e => setMealName(e.target.value)} />
+              <input style={inp} type="tel" placeholder="カロリー（kcal）" value={mealCal} onChange={e => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
               <button onClick={() => addMeal()} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
             </div>
           </div>
+
           <div style={card}>
             <div style={sec}>📋 TODAY'S MEALS</div>
-            {meals.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
-            {meals.map((m) => (
+            {dayData.meals.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
+            {dayData.meals.map(m => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 4, height: 36, borderRadius: 2, background: m.color, flexShrink: 0 }} />
+                  <div style={{ width: 4, height: 36, borderRadius: 2, background: m.color }} />
                   <div>
                     <div style={{ fontWeight: "700", fontSize: 14 }}>{m.name}</div>
                     <div style={{ fontSize: 11, color: C.sub }}>{m.time}</div>
@@ -438,13 +560,13 @@ export default function App() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={badge(m.color)}>{m.cal} kcal</span>
-                  <button onClick={() => setMeals(meals.filter((x) => x.id !== m.id))}
+                  <button onClick={() => updateDay(day => ({ ...day, meals: day.meals.filter(x => x.id !== m.id) }))}
                     style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
                 </div>
               </div>
             ))}
-            {meals.length > 0 && (
-              <div style={{ paddingTop: 12, fontWeight: "900", display: "flex", justifyContent: "space-between", fontSize: 15 }}>
+            {dayData.meals.length > 0 && (
+              <div style={{ paddingTop: 12, fontWeight: "900", display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: C.sub }}>TOTAL</span>
                 <span style={{ color: C.orange }}>{totalCal} kcal</span>
               </div>
@@ -456,27 +578,23 @@ export default function App() {
         {tab === 2 && <>
           <div style={card}>
             <div style={sec}>🚶 STEPS</div>
-            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="歩数（例: 8000）"
-              value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))} />
+            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="歩数（例: 8000）" value={stepsInput} onChange={e => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))} />
             <button onClick={addExercise} style={sportBtn(C.green)}>➕ ADD STEPS</button>
           </div>
           <div style={card}>
             <div style={sec}>💪 WORKOUT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <select value={selectedExercise.name}
-                onChange={(e) => setSelectedExercise(EXERCISES.find((ex) => ex.name === e.target.value))}
-                style={inp}>
-                {EXERCISES.map((ex) => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
+              <select value={selectedExercise.name} onChange={e => setSelectedExercise(EXERCISES.find(ex => ex.name === e.target.value))} style={inp}>
+                {EXERCISES.map(ex => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
               </select>
-              <input style={inp} type="tel" placeholder="時間（分）（例: 30）"
-                value={exerciseMinutes} onChange={(e) => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))} />
+              <input style={inp} type="tel" placeholder="時間（分）" value={exerciseMinutes} onChange={e => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))} />
               <button onClick={addExercise} style={sportBtn(C.green)}>🔥 ADD WORKOUT</button>
             </div>
           </div>
           <div style={card}>
             <div style={sec}>📋 TODAY'S TRAINING</div>
-            {exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
-            {exercises.map((e) => (
+            {dayData.exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
+            {dayData.exercises.map(e => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 4, height: 36, borderRadius: 2, background: C.green }} />
@@ -487,13 +605,13 @@ export default function App() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={badge(C.green)}>{e.burned} kcal</span>
-                  <button onClick={() => setExercises(exercises.filter((x) => x.id !== e.id))}
-                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
+                  <button onClick={() => updateDay(day => ({ ...day, exercises: day.exercises.filter(x => x.id !== e.id) }))}
+                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px" }}>×</button>
                 </div>
               </div>
             ))}
-            {exercises.length > 0 && (
-              <div style={{ paddingTop: 12, fontWeight: "900", display: "flex", justifyContent: "space-between", fontSize: 15 }}>
+            {dayData.exercises.length > 0 && (
+              <div style={{ paddingTop: 12, fontWeight: "900", display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: C.sub }}>TOTAL BURNED</span>
                 <span style={{ color: C.green }}>{totalBurned} kcal</span>
               </div>
@@ -504,22 +622,40 @@ export default function App() {
         {/* WEIGHT */}
         {tab === 3 && <>
           <div style={card}>
+            <div style={sec}>📊 BMI</div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+              <div style={{ flex: 1, background: `${bmiColor}11`, border: `1px solid ${bmiColor}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>BMI</div>
+                <div style={{ fontSize: 36, fontWeight: "900", color: bmiColor }}>{bmi ?? "−"}</div>
+                <div style={{ fontSize: 12, color: bmiColor, fontWeight: "800" }}>{bmiLabel}</div>
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                {[["< 18.5", "低体重", C.blue], ["18.5-25", "普通", C.green], ["25-30", "肥満①", C.orange], ["> 30", "肥満②", C.red]].map(([range, label, color]) => (
+                  <div key={label} style={{ background: C.card2, borderRadius: 8, padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 11, color: C.sub }}>{range}</span>
+                    <span style={{ fontSize: 11, color, fontWeight: "800" }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: C.sub, textAlign: "center" }}>身長: {goal.height}cm（GOALタブで変更可）</div>
+          </div>
+          <div style={card}>
             <div style={sec}>📈 WEIGHT GRAPH</div>
             <WeightGraph entries={weights} />
           </div>
           <div style={card}>
             <div style={sec}>➕ RECORD WEIGHT</div>
-            <input style={{ ...inp, marginBottom: 12 }} placeholder="体重（例: 66.5）" inputMode="decimal"
-              value={weightInput} onChange={(e) => setWeightInput(e.target.value.replace(/[^0-9.]/g, ""))} />
-            <button onTouchEnd={(e) => { e.preventDefault(); addWeight(); }} onClick={addWeight} style={sportBtn(C.blue)}>⚖️ SAVE WEIGHT</button>
+            <input style={{ ...inp, marginBottom: 12 }} placeholder="体重（例: 66.5）" inputMode="decimal" value={weightInput} onChange={e => setWeightInput(e.target.value.replace(/[^0-9.]/g, ""))} />
+            <button onTouchEnd={e => { e.preventDefault(); addWeight(); }} onClick={addWeight} style={sportBtn(C.blue)}>⚖️ SAVE WEIGHT</button>
           </div>
           <div style={card}>
             <div style={sec}>📅 HISTORY</div>
             {weights.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
-            {[...weights].reverse().slice(0, 7).map((w, i) => (
+            {[...weights].reverse().slice(0, 10).map((w, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
                 <span style={{ color: C.sub, fontSize: 13 }}>{w.date}</span>
-                <span style={{ fontWeight: "900", color: C.text }}>{w.weight} <span style={{ fontSize: 11, color: C.sub }}>kg</span></span>
+                <span style={{ fontWeight: "900" }}>{w.weight} <span style={{ fontSize: 11, color: C.sub }}>kg</span></span>
               </div>
             ))}
           </div>
@@ -529,25 +665,19 @@ export default function App() {
         {tab === 4 && <>
           <div style={card}>
             <div style={sec}>✏️ NEW MEMO</div>
-            <textarea
-              style={{ ...inp, height: 100, resize: "none", lineHeight: 1.6 }}
-              placeholder="気づいたこと、体調、食欲など…"
-              value={memoInput}
-              onChange={(e) => setMemoInput(e.target.value)}
-            />
+            <textarea style={{ ...inp, height: 100, resize: "none", lineHeight: 1.6 }} placeholder="気づいたこと、体調…" value={memoInput} onChange={e => setMemoInput(e.target.value)} />
             <button onClick={addMemo} style={{ ...sportBtn(C.purple), marginTop: 12 }}>📝 SAVE MEMO</button>
           </div>
           <div style={card}>
             <div style={sec}>📋 MEMO LIST</div>
             {memos.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>メモなし</div>}
-            {[...memos].reverse().map((m) => (
+            {[...memos].reverse().map(m => (
               <div key={m.id} style={{ padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <span style={{ fontSize: 11, color: C.purple, fontWeight: "bold" }}>{m.date}</span>
-                  <button onClick={() => setMemos(memos.filter((x) => x.id !== m.id))}
-                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "4px 8px" }}>×</button>
+                  <button onClick={() => setMemos(memos.filter(x => x.id !== m.id))} style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "4px 8px" }}>×</button>
                 </div>
-                <div style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap", color: C.text }}>{m.text}</div>
+                <div style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
               </div>
             ))}
           </div>
@@ -559,41 +689,58 @@ export default function App() {
             <div style={sec}>🎯 CURRENT GOALS</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
               <div style={{ flex: 1, background: `${C.purple}11`, border: `1px solid ${C.purple}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 10, color: C.sub, marginBottom: 6, letterSpacing: 1 }}>TARGET WEIGHT</div>
-                <div style={{ fontSize: 34, fontWeight: "900", color: C.purple, letterSpacing: -1 }}>{goal.target}<span style={{ fontSize: 13, fontWeight: "normal", color: C.sub }}> kg</span></div>
+                <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>TARGET</div>
+                <div style={{ fontSize: 30, fontWeight: "900", color: C.purple }}>{goal.target}<span style={{ fontSize: 12, color: C.sub }}> kg</span></div>
               </div>
               <div style={{ flex: 1, background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 10, color: C.sub, marginBottom: 6, letterSpacing: 1 }}>CAL LIMIT</div>
-                <div style={{ fontSize: 28, fontWeight: "900", color: C.orange, letterSpacing: -1 }}>{goal.calLimit}<span style={{ fontSize: 11, fontWeight: "normal", color: C.sub }}> kcal</span></div>
+                <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>CAL LIMIT</div>
+                <div style={{ fontSize: 24, fontWeight: "900", color: C.orange }}>{goal.calLimit}<span style={{ fontSize: 10, color: C.sub }}> kcal</span></div>
               </div>
             </div>
             <div style={{ background: `${C.green}0D`, border: `1px solid ${C.green}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
               <div style={{ fontSize: 11, color: C.sub, marginBottom: 4 }}>REMAINING</div>
-              <div style={{ fontSize: 32, fontWeight: "900", color: C.green }}>あと {weightLeft} kg！</div>
+              <div style={{ fontSize: 30, fontWeight: "900", color: C.green }}>あと {weightLeft} kg！</div>
             </div>
           </div>
+
           <div style={card}>
             <div style={sec}>✏️ UPDATE GOALS</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <input style={inp} placeholder={`目標体重（現在: ${goal.target} kg）`} inputMode="decimal"
-                value={goalTarget} onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))} />
-              <input style={inp} placeholder={`カロリー上限（現在: ${goal.calLimit} kcal）`} inputMode="numeric"
-                value={goalCalInput} onChange={(e) => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))} />
-              <button onTouchEnd={(e) => { e.preventDefault(); saveGoal(); }} onClick={saveGoal} style={sportBtn(C.purple)}>💾 SAVE GOALS</button>
+              <input style={inp} placeholder={`目標体重（現在: ${goal.target}kg）`} inputMode="decimal" value={goalTarget} onChange={e => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))} />
+              <input style={inp} placeholder={`カロリー上限（現在: ${goal.calLimit}kcal）`} inputMode="numeric" value={goalCalInput} onChange={e => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))} />
+              <input style={inp} placeholder={`身長（現在: ${goal.height}cm）`} inputMode="numeric" value={goalHeight} onChange={e => setGoalHeight(e.target.value.replace(/[^0-9]/g, ""))} />
+              <button onTouchEnd={e => { e.preventDefault(); saveGoal(); }} onClick={saveGoal} style={sportBtn(C.purple)}>💾 SAVE GOALS</button>
             </div>
           </div>
+
+          {/* AIアドバイス */}
           <div style={card}>
-            <div style={sec}>💡 PRO TIPS</div>
-            {[
-              { icon: "🥩", text: "タンパク質を意識して筋肉を維持しよう" },
-              { icon: "💧", text: "1日2Lの水を飲むと代謝アップ！" },
-              { icon: "🏃", text: "食後30分のウォーキングが効果的" },
-            ].map((tip, i) => (
-              <div key={i} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: i < 2 ? `1px solid ${C.border}` : "none", alignItems: "center" }}>
-                <span style={{ fontSize: 22 }}>{tip.icon}</span>
-                <span style={{ fontSize: 14, lineHeight: 1.5, color: C.sub }}>{tip.text}</span>
+            <div style={sec}>🤖 AI ADVICE</div>
+            <button onClick={getAIAdvice} disabled={aiLoading} style={sportBtn(aiLoading ? C.sub2 : C.green, { marginBottom: 12 })}>
+              {aiLoading ? "⚡ 分析中..." : "🤖 AIにアドバイスをもらう"}
+            </button>
+            {aiAdvice.length > 0 && aiAdvice.map((a, i) => (
+              <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < aiAdvice.length - 1 ? `1px solid ${C.border}` : "none", alignItems: "flex-start" }}>
+                <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
+                <span style={{ fontSize: 14, lineHeight: 1.6, color: C.sub }}>{a}</span>
               </div>
             ))}
+            {aiAdvice.length === 0 && <div style={{ color: C.sub, fontSize: 13, textAlign: "center", padding: "8px 0" }}>ボタンを押してAIアドバイスを取得</div>}
+          </div>
+
+          {/* CSVエクスポート */}
+          <div style={card}>
+            <div style={sec}>📤 EXPORT DATA</div>
+            <button onClick={exportCSV} style={sportBtn(C.blue)}>📊 CSVでダウンロード</button>
+            <div style={{ fontSize: 11, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分の全データをエクスポート</div>
+          </div>
+
+          {/* APIキー設定 */}
+          <div style={card}>
+            <div style={sec}>⚙️ SETTINGS</div>
+            <div style={{ fontSize: 12, color: C.sub, marginBottom: 8 }}>Anthropic APIキー（AI機能に必要）</div>
+            <input style={{ ...inp, marginBottom: 10, fontSize: 13, letterSpacing: 1 }} type="password" placeholder="sk-ant-..." value={apiKey} onChange={e => saveApiKey(e.target.value)} />
+            <div style={{ fontSize: 11, color: C.sub2 }}>APIキーはこのデバイスのみに保存されます</div>
           </div>
         </>}
       </div>
