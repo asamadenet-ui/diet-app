@@ -165,27 +165,36 @@ function CalorieCamera({ onAdd }) {
 function saveData(data) {
   localStorage.setItem("dietAppData", JSON.stringify(data));
 }
+function loadData() {
+  try {
+    const raw = localStorage.getItem("dietAppData");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 export default function App() {
+  const saved = loadData();
   const [tab, setTab] = useState(0);
-  const [fastActive, setFastActive] = useState(false);
-  const [fastElapsed, setFastElapsed] = useState(0);
-  const [fastGoal, setFastGoal] = useState(16);
+  const [fastActive, setFastActive] = useState(saved?.fastActive ?? false);
+  const [fastElapsed, setFastElapsed] = useState(saved?.fastElapsed ?? 0);
+  const [fastGoal, setFastGoal] = useState(saved?.fastGoal ?? 16);
   const [fastStartTime, setFastStartTime] = useState(null);
-  const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
+  const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed ?? 0);
   const timerRef = useRef(null);
-  const [meals, setMeals] = useState([]);
+  const [meals, setMeals] = useState(saved?.meals ?? []);
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
-  const [goal, setGoal] = useState({ current: 0, target: 0, calLimit: 2000 });
-  const [exercises, setExercises] = useState([]);
+  const [goal, setGoal] = useState(saved?.goal ?? { current: 0, target: 0, calLimit: 2000 });
+  const [exercises, setExercises] = useState(saved?.exercises ?? []);
   const [stepsInput, setStepsInput] = useState("");
   const [exerciseMinutes, setExerciseMinutes] = useState("");
   const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
-  const [weights, setWeights] = useState([]);
+  const [weights, setWeights] = useState(saved?.weights ?? []);
   const [weightInput, setWeightInput] = useState("");
   const [goalTarget, setGoalTarget] = useState("");
   const [goalCalInput, setGoalCalInput] = useState("");
-  const [memos, setMemos] = useState([]);
+  const [memos, setMemos] = useState(saved?.memos ?? []);
   const [memoInput, setMemoInput] = useState("");
 
   useEffect(() => {
