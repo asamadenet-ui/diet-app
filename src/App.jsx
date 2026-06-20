@@ -422,6 +422,9 @@ export default function App() {
   const [weightInput, setWeightInput] = useState("");
   const [apiKey, setApiKey] = useState(localStorage.getItem("anthropicKey") ?? "");
   const [aiAdvice, setAiAdvice] = useState([]);
+  const [tdeeAge, setTdeeAge] = useState(saved?.tdeeProfile?.age ?? "");
+  const [tdeeSex, setTdeeSex] = useState(saved?.tdeeProfile?.sex ?? "female");
+  const [tdeeActivity, setTdeeActivity] = useState(saved?.tdeeProfile?.activity ?? 1.55);
 
   const getDayData = (date) => days[date] ?? { meals: [], exercises: [], water: 0 };
   const dayData = getDayData(currentDate);
@@ -457,12 +460,12 @@ export default function App() {
   }, [fastActive, fastStartTime, fastBaseElapsed, fastGoal, fastNotified]);
 
   useEffect(() => {
-    const data = { days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos };
+    const data = { days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, tdeeProfile: { age: tdeeAge, sex: tdeeSex, activity: tdeeActivity } };
     saveData(data);
     const handleVisibility = () => { if (document.visibilityState === 'hidden') saveData(data); };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos]);
+  }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, tdeeAge, tdeeSex, tdeeActivity]);
 
   const requestNotificationPermission = async () => {
     if (Notification.permission === "default") await Notification.requestPermission();
@@ -974,6 +977,84 @@ export default function App() {
                 {Number(weightLeft) <= 0 ? "🎉 目標達成！" : `あと ${weightLeft} kg！`}
               </div>
             </div>
+          </div>
+
+          {/* TDEEカード */}
+          <div style={card}>
+            <div style={sec}>🔥 TDEE CALCULATOR</div>
+            {(() => {
+              const w = latestWeight ?? Number(goal.target) ?? 60;
+              const h = goal.height;
+              const a = Number(tdeeAge);
+              const bmr = (tdeeAge && w && h)
+                ? Math.round(tdeeSex === "male"
+                  ? 10 * w + 6.25 * h - 5 * a + 5
+                  : 10 * w + 6.25 * h - 5 * a - 161)
+                : null;
+              const tdee = bmr ? Math.round(bmr * Number(tdeeActivity)) : null;
+              const ACTIVITY_LABELS = [
+                { val: 1.2,   label: "座り仕事中心（ほぼ運動なし）" },
+                { val: 1.375, label: "軽い運動（週1〜3日）" },
+                { val: 1.55,  label: "適度な運動（週3〜5日）" },
+                { val: 1.725, label: "激しい運動（週6〜7日）" },
+                { val: 1.9,   label: "ハードな肉体労働" },
+              ];
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {/* 性別 */}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {[["female","女性"],["male","男性"]].map(([v,label]) => (
+                      <button key={v} onClick={() => setTdeeSex(v)}
+                        style={{ flex: 1, padding: "12px", borderRadius: 10, border: `2px solid ${tdeeSex === v ? C.blue : C.border}`, background: tdeeSex === v ? `${C.blue}22` : C.card2, color: tdeeSex === v ? C.blue : C.sub, fontWeight: "800", fontSize: 14, cursor: "pointer" }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* 年齢 */}
+                  <input style={inp} type="tel" placeholder="年齢（例: 35）" value={tdeeAge}
+                    onChange={e => setTdeeAge(e.target.value.replace(/[^0-9]/g, ""))} />
+                  {/* 活動量 */}
+                  <select value={tdeeActivity} onChange={e => setTdeeActivity(Number(e.target.value))} style={inp}>
+                    {ACTIVITY_LABELS.map(a => <option key={a.val} value={a.val}>{a.label}</option>)}
+                  </select>
+                  {/* 計算結果 */}
+                  {bmr && tdee ? (
+                    <div style={{ background: C.card2, borderRadius: 12, padding: 16, marginTop: 4 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div style={{ textAlign: "center", flex: 1 }}>
+                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>基礎代謝 BMR</div>
+                          <div style={{ fontSize: 24, fontWeight: "900", color: C.blue }}>{bmr.toLocaleString()}</div>
+                          <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", color: C.sub }}>→</div>
+                        <div style={{ textAlign: "center", flex: 1 }}>
+                          <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>1日の総消費 TDEE</div>
+                          <div style={{ fontSize: 28, fontWeight: "900", color: C.orange }}>{tdee.toLocaleString()}</div>
+                          <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, color: C.sub, textAlign: "center", marginBottom: 10 }}>
+                        ダイエット目標なら <span style={{ color: C.green, fontWeight: "700" }}>{(tdee - 500).toLocaleString()}</span> kcal（−500kcal）が目安
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => setGoal(g => ({ ...g, calLimit: tdee }))}
+                          style={{ ...sportBtn(C.orange), flex: 1, padding: "10px", fontSize: 12 }}>
+                          TDEEをカロリー上限に設定
+                        </button>
+                        <button onClick={() => setGoal(g => ({ ...g, calLimit: tdee - 500 }))}
+                          style={{ ...sportBtn(C.green), flex: 1, padding: "10px", fontSize: 12 }}>
+                          −500kcalで設定
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 12, color: C.sub, textAlign: "center", padding: "8px 0" }}>
+                      年齢を入力するとTDEEを計算します（体重・身長はGOAL設定から参照）
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div style={card}>
