@@ -3,9 +3,17 @@ function calcStepCalories(steps, weight) {
   return Math.round(weight * steps * 0.0005 * 10) / 10;
 }
 
-
 const TABS = ["🏠", "🍽", "🏃", "⚖️", "📝", "🎯"];
 const TAB_LABELS = ["ホーム", "食事", "運動", "体重", "メモ", "目標"];
+
+const EXERCISES = [
+  { icon: "🏃", name: "ジョギング", met: 7.0 },
+  { icon: "🚴", name: "サイクリング", met: 6.0 },
+  { icon: "🏊", name: "水泳", met: 8.0 },
+  { icon: "🧘", name: "ヨガ", met: 3.0 },
+  { icon: "💪", name: "筋トレ", met: 5.0 },
+  { icon: "🏋️", name: "ウォーキング", met: 3.5 },
+];
 
 function WeightGraph({ entries }) {
   if (entries.length === 0)
@@ -163,14 +171,23 @@ export default function App() {
   const [fastElapsed, setFastElapsed] = useState(0);
   const [fastGoal, setFastGoal] = useState(16);
   const [fastStartTime, setFastStartTime] = useState(null);
-const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
+  const [fastBaseElapsed, setFastBaseElapsed] = useState(0);
   const timerRef = useRef(null);
   const [meals, setMeals] = useState([]);
-const [goal, setGoal] = useState({ current: 0, target: 0, calLimit: 2000 });
-const [exercises, setExercises] = useState([]);
-const [weights, setWeights] = useState([]);
+  const [mealName, setMealName] = useState("");
+  const [mealCal, setMealCal] = useState("");
+  const [goal, setGoal] = useState({ current: 0, target: 0, calLimit: 2000 });
+  const [exercises, setExercises] = useState([]);
+  const [stepsInput, setStepsInput] = useState("");
+  const [exerciseMinutes, setExerciseMinutes] = useState("");
+  const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
+  const [weights, setWeights] = useState([]);
+  const [weightInput, setWeightInput] = useState("");
+  const [goalTarget, setGoalTarget] = useState("");
+  const [goalCalInput, setGoalCalInput] = useState("");
+  const [memos, setMemos] = useState([]);
+  const [memoInput, setMemoInput] = useState("");
 
-const [memos, setMemos] = useState([]);
   useEffect(() => {
     if (fastActive) {
       timerRef.current = setInterval(() => {
@@ -198,8 +215,8 @@ const [memos, setMemos] = useState([]);
     }
   };
   const resetFastTimer = () => {
-  setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
-};
+    setFastElapsed(0); setFastBaseElapsed(0); setFastStartTime(null); setFastActive(false);
+  };
 
   const addMeal = (name, cal) => {
     const n = name || mealName;
@@ -224,7 +241,6 @@ const [memos, setMemos] = useState([]);
     }
   };
 
-  
   const addWeight = () => {
     if (!weightInput) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -232,15 +248,21 @@ const [memos, setMemos] = useState([]);
     setWeightInput("");
   };
 
+  const addMemo = () => {
+    if (!memoInput.trim()) return;
+    setMemos([...memos, { id: Date.now(), text: memoInput.trim(), date: new Date().toLocaleDateString("ja-JP") }]);
+    setMemoInput("");
+  };
+
   const saveGoal = () => {
     setGoal({ target: goalTarget ? Number(goalTarget) : goal.target, calLimit: goalCalInput ? Number(goalCalInput) : goal.calLimit });
     setGoalTarget(""); setGoalCalInput("");
   };
-const totalCal = meals.reduce((sum, m) => sum + (m.cal || 0), 0);
-const totalBurned = exercises.reduce((sum, e) => sum + (e.burned || 0), 0);
-const netCal = totalCal - totalBurned;
-const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
-  const weightLeft = (goal.current - goal.target).toFixed(1);
+  const totalCal = meals.reduce((sum, m) => sum + (m.cal || 0), 0);
+  const totalBurned = exercises.reduce((sum, e) => sum + (e.burned || 0), 0);
+  const netCal = totalCal - totalBurned;
+  const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : null;
+  const weightLeft = (latestWeight !== null ? latestWeight - goal.target : 0).toFixed(1);
   const calPct = Math.min((totalCal / goal.calLimit) * 100, 100);
 
   const inp = {
@@ -289,8 +311,7 @@ const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : n
                   style={btn(fastElapsed >= fastGoal * 3600 ? "#6BCB77" : fastActive ? "#FF6B6B" : "#4D96FF")}>
                   {fastElapsed >= fastGoal * 3600 ? "🎉 リセット" : fastActive ? "⏸ 停止" : "▶ スタート"}
                 </button>
-            <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 10, border: "1px solid #ddd", background: "#fff", color: "#888", fontSize: 13, cursor: "pointer" }}>🔄 リセット</button>
-                
+                <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 10, border: "1px solid #ddd", background: "#fff", color: "#888", fontSize: 13, cursor: "pointer" }}>🔄 リセット</button>
               </div>
             </div>
           </div>
@@ -336,6 +357,8 @@ const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : n
             </div>
           </div>
         </>}
+
+        {/* 食事 */}
         {tab === 1 && <>
           <div style={card}>
             <div style={sec}>📷 写真でカロリー計算</div>
@@ -385,7 +408,58 @@ const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : n
             </div>
           </div>
         </>}
+
+        {/* 運動 */}
         {tab === 2 && <>
+          <div style={card}>
+            <div style={sec}>🚶 歩数で記録</div>
+            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="例: 8000"
+              value={stepsInput} onChange={(e) => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))} />
+            <button onClick={addExercise} style={btn("#6BCB77")}>➕ 歩数を追加</button>
+          </div>
+          <div style={card}>
+            <div style={sec}>🏃 運動で記録</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>運動の種類</label>
+                <select value={selectedExercise.name}
+                  onChange={(e) => setSelectedExercise(EXERCISES.find((ex) => ex.name === e.target.value))}
+                  style={inp}>
+                  {EXERCISES.map((ex) => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>時間（分）</label>
+                <input style={inp} type="tel" placeholder="例: 30"
+                  value={exerciseMinutes} onChange={(e) => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))} />
+              </div>
+              <button onClick={addExercise} style={btn("#6BCB77")}>➕ 運動を追加</button>
+            </div>
+          </div>
+          <div style={card}>
+            <div style={sec}>📋 今日の運動</div>
+            {exercises.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだ記録がありません</div>}
+            {exercises.map((e) => (
+              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #F5F5F5" }}>
+                <div>
+                  <div style={{ fontWeight: "bold", fontSize: 14 }}>{e.name}</div>
+                  <div style={{ fontSize: 11, color: "#888" }}>{e.time}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={tag("#6BCB77")}>{e.burned} kcal</span>
+                  <button onClick={() => setExercises(exercises.filter((x) => x.id !== e.id))}
+                    style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 22, padding: "8px 10px", touchAction: "manipulation" }}>×</button>
+                </div>
+              </div>
+            ))}
+            <div style={{ paddingTop: 12, fontWeight: "bold", display: "flex", justifyContent: "space-between" }}>
+              <span>合計消費</span><span style={{ color: "#6BCB77" }}>{totalBurned} kcal</span>
+            </div>
+          </div>
+        </>}
+
+        {/* 体重 */}
+        {tab === 3 && <>
           <div style={card}>
             <div style={sec}>📈 体重グラフ</div>
             <WeightGraph entries={weights} />
@@ -406,7 +480,37 @@ const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : n
             ))}
           </div>
         </>}
-        {tab === 3 && <>
+
+        {/* メモ */}
+        {tab === 4 && <>
+          <div style={card}>
+            <div style={sec}>✏️ メモを追加</div>
+            <textarea
+              style={{ ...inp, height: 100, resize: "none", lineHeight: 1.6 }}
+              placeholder="気づいたこと、体調、食欲など…"
+              value={memoInput}
+              onChange={(e) => setMemoInput(e.target.value)}
+            />
+            <button onClick={addMemo} style={{ ...btn("#C77DFF"), marginTop: 12 }}>📝 メモを保存</button>
+          </div>
+          <div style={card}>
+            <div style={sec}>📋 メモ一覧</div>
+            {memos.length === 0 && <div style={{ color: "#888", textAlign: "center", padding: 20 }}>まだメモがありません</div>}
+            {[...memos].reverse().map((m) => (
+              <div key={m.id} style={{ padding: "12px 0", borderBottom: "1px solid #F5F5F5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: "#888" }}>{m.date}</span>
+                  <button onClick={() => setMemos(memos.filter((x) => x.id !== m.id))}
+                    style={{ background: "none", border: "none", color: "#CCC", cursor: "pointer", fontSize: 20, padding: "4px 8px" }}>×</button>
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {/* 目標 */}
+        {tab === 5 && <>
           <div style={card}>
             <div style={sec}>🎯 現在の目標</div>
             <div style={{ display: "flex", gap: 12 }}>
@@ -428,7 +532,7 @@ const latestWeight = weights.length > 0 ? weights[weights.length - 1].weight : n
             <div style={sec}>✏️ 目標を変更</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <input style={inp} placeholder={`目標体重（現在: ${goal.target} kg）`} inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))} />
-              <input style={inp} placeholder={`カロリー上限（現在: ${goal.calLimit} kcal）`} inputMode="numeric" pattern="[0-9]*" value={goalCal} onChange={(e) => setGoalCal(e.target.value.replace(/[^0-9]/g, ""))} />
+              <input style={inp} placeholder={`カロリー上限（現在: ${goal.calLimit} kcal）`} inputMode="numeric" pattern="[0-9]*" value={goalCalInput} onChange={(e) => setGoalCalInput(e.target.value.replace(/[^0-9]/g, ""))} />
               <button onTouchEnd={(e) => { e.preventDefault(); saveGoal(); }} onClick={saveGoal} style={btn("#C77DFF")}>保存する</button>
             </div>
           </div>
