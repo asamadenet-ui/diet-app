@@ -133,7 +133,7 @@ function CalorieCamera({ onAdd, apiKey }) {
 
   const analyze = async () => {
     if (!image) return;
-    if (!apiKey) { setError("APIキーを「GOALタブ > 設定」に入力してください。"); return; }
+    if (!apiKey) { setError("AI解析にはAPIキーが必要です。下の食品DBからワンタップで追加できます。"); return; }
     setLoading(true); setError(null);
     try {
       const base64 = image.split(",")[1];
@@ -220,7 +220,6 @@ export default function App() {
   const [weightInput, setWeightInput] = useState("");
   const [apiKey, setApiKey] = useState(localStorage.getItem("anthropicKey") ?? "");
   const [aiAdvice, setAiAdvice] = useState([]);
-  const [aiLoading, setAiLoading] = useState(false);
 
   const getDayData = (date) => days[date] ?? { meals: [], exercises: [], water: 0 };
   const dayData = getDayData(currentDate);
@@ -345,30 +344,45 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const getAIAdvice = async () => {
-    if (!apiKey) { setAiAdvice(["APIキーをこのページ下部の設定に入力してください。"]); return; }
-    setAiLoading(true);
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json", "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6", max_tokens: 600,
-          messages: [{ role: "user", content: `ダイエットデータを分析して日本語でアドバイス3つをJSONで。
-今日の摂取: ${totalCal}kcal / 消費: ${totalBurned}kcal / 上限: ${goal.calLimit}kcal
-体重: ${latestWeight ?? "未記録"}kg / 目標: ${goal.target}kg / BMI: ${bmi}
-水分: ${todayWater}ml
-JSON形式: {"advice":["アドバイス1","アドバイス2","アドバイス3"]}` }]
-        })
-      });
-      const data = await response.json();
-      const parsed = JSON.parse(data.content[0].text.replace(/```json|```/g, "").trim());
-      setAiAdvice(parsed.advice);
-    } catch { setAiAdvice(["アドバイスの取得に失敗しました。"]); }
-    setAiLoading(false);
+  const generateAdvice = () => {
+    const tips = [];
+    // カロリー
+    if (totalCal === 0) {
+      tips.push("まだ食事が記録されていません。食事を記録してカロリーを管理しましょう！");
+    } else if (totalCal > goal.calLimit) {
+      tips.push(`カロリーが上限より ${totalCal - goal.calLimit}kcal オーバーしています。明日は ${goal.calLimit}kcal 以内を目指しましょう。`);
+    } else {
+      tips.push(`今日のカロリーは目標内です！あと ${goal.calLimit - totalCal}kcal の余裕があります。この調子で！`);
+    }
+    // 水分
+    if (todayWater === 0) {
+      tips.push("水分がまだ記録されていません。こまめな水分補給は代謝アップに効果的です。");
+    } else if (todayWater < 1500) {
+      tips.push(`水分が ${todayWater}ml です。あと ${2000 - todayWater}ml 飲むと理想的です。`);
+    } else {
+      tips.push(`水分補給バッチリ！${todayWater}ml 摂取済みです。`);
+    }
+    // 運動
+    if (totalBurned === 0) {
+      tips.push("今日はまだ運動の記録がありません。軽いウォーキングだけでも効果があります！");
+    } else if (totalBurned < 200) {
+      tips.push(`今日は ${totalBurned}kcal 消費しました。もう少し動くとさらに効果的です。`);
+    } else {
+      tips.push(`今日は ${totalBurned}kcal 消費！素晴らしい運動量です。`);
+    }
+    // 体重トレンド
+    if (weights.length >= 2) {
+      const diff = (weights[weights.length - 1].weight - weights[weights.length - 2].weight).toFixed(1);
+      if (Number(diff) < 0) tips.push(`前回より ${Math.abs(diff)}kg 減量！順調に進んでいます。`);
+      else if (Number(diff) > 0) tips.push(`前回より ${diff}kg 増加。食事内容を見直してみましょう。`);
+      else tips.push("体重が維持できています。安定した良い状態です。");
+    }
+    // BMI
+    if (bmi) {
+      if (Number(bmi) < 18.5) tips.push("BMIが低めです。筋肉をつけることを意識してタンパク質を多めに摂りましょう。");
+      else if (Number(bmi) >= 25) tips.push("BMIを下げるには有酸素運動と食事管理の組み合わせが効果的です。");
+    }
+    setAiAdvice(tips.slice(0, 4));
   };
 
   const totalCal = dayData.meals.reduce((s, m) => s + (m.cal || 0), 0);
@@ -715,9 +729,9 @@ JSON形式: {"advice":["アドバイス1","アドバイス2","アドバイス3"]
 
           {/* AIアドバイス */}
           <div style={card}>
-            <div style={sec}>🤖 AI ADVICE</div>
-            <button onClick={getAIAdvice} disabled={aiLoading} style={sportBtn(aiLoading ? C.sub2 : C.green, { marginBottom: 12 })}>
-              {aiLoading ? "⚡ 分析中..." : "🤖 AIにアドバイスをもらう"}
+            <div style={sec}>📊 SMART ADVICE</div>
+            <button onClick={generateAdvice} style={sportBtn(C.green, { marginBottom: 12 })}>
+              ⚡ データを分析してアドバイス
             </button>
             {aiAdvice.length > 0 && aiAdvice.map((a, i) => (
               <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < aiAdvice.length - 1 ? `1px solid ${C.border}` : "none", alignItems: "flex-start" }}>
@@ -735,13 +749,6 @@ JSON形式: {"advice":["アドバイス1","アドバイス2","アドバイス3"]
             <div style={{ fontSize: 11, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分の全データをエクスポート</div>
           </div>
 
-          {/* APIキー設定 */}
-          <div style={card}>
-            <div style={sec}>⚙️ SETTINGS</div>
-            <div style={{ fontSize: 12, color: C.sub, marginBottom: 8 }}>Anthropic APIキー（AI機能に必要）</div>
-            <input style={{ ...inp, marginBottom: 10, fontSize: 13, letterSpacing: 1 }} type="password" placeholder="sk-ant-..." value={apiKey} onChange={e => saveApiKey(e.target.value)} />
-            <div style={{ fontSize: 11, color: C.sub2 }}>APIキーはこのデバイスのみに保存されます</div>
-          </div>
         </>}
       </div>
 
