@@ -4,7 +4,11 @@ function calcStepCalories(steps, weight) {
   return Math.round(weight * steps * 0.0005 * 10) / 10;
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
+function getLocalDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+const TODAY = getLocalDate();
 
 const TABS = ["🏠", "🍽", "🏃", "⚖️", "📝", "🎯"];
 const TAB_LABELS = ["HOME", "MEAL", "TRAIN", "WEIGHT", "MEMO", "GOAL"];
@@ -262,7 +266,11 @@ export default function App() {
   }, [fastActive, fastStartTime, fastBaseElapsed, fastGoal, fastNotified]);
 
   useEffect(() => {
-    saveData({ days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos });
+    const data = { days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos };
+    saveData(data);
+    const handleVisibility = () => { if (document.visibilityState === 'hidden') saveData(data); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos]);
 
   const requestNotificationPermission = async () => {
