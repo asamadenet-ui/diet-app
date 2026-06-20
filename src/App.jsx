@@ -491,7 +491,7 @@ export default function App() {
       ...day,
       meals: [...day.meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: mealColors[day.meals.length % mealColors.length] }]
     }));
-    setMealName(""); setMealCal("");
+    setMealName(""); setMealCal(""); setMealGrams(""); setMealCalPer100g(null); setGramSuggestions([]);
   };
 
   const addExercise = () => {
@@ -552,29 +552,30 @@ export default function App() {
 
   const generateAdvice = () => {
     const tips = [];
+    const dayLabel = isToday ? "今日" : dateLabel;
     // カロリー
     if (totalCal === 0) {
-      tips.push("まだ食事が記録されていません。食事を記録してカロリーを管理しましょう！");
+      tips.push(`${dayLabel}はまだ食事が記録されていません。食事を記録してカロリーを管理しましょう！`);
     } else if (totalCal > goal.calLimit) {
-      tips.push(`カロリーが上限より ${totalCal - goal.calLimit}kcal オーバーしています。明日は ${goal.calLimit}kcal 以内を目指しましょう。`);
+      tips.push(`${dayLabel}のカロリーが上限より ${totalCal - goal.calLimit}kcal オーバーしています。次回は ${goal.calLimit}kcal 以内を目指しましょう。`);
     } else {
-      tips.push(`今日のカロリーは目標内です！あと ${goal.calLimit - totalCal}kcal の余裕があります。この調子で！`);
+      tips.push(`${dayLabel}のカロリーは目標内です！あと ${goal.calLimit - totalCal}kcal の余裕があります。この調子で！`);
     }
     // 水分
     if (todayWater === 0) {
-      tips.push("水分がまだ記録されていません。こまめな水分補給は代謝アップに効果的です。");
+      tips.push(`${dayLabel}は水分がまだ記録されていません。こまめな水分補給は代謝アップに効果的です。`);
     } else if (todayWater < 1500) {
-      tips.push(`水分が ${todayWater}ml です。あと ${2000 - todayWater}ml 飲むと理想的です。`);
+      tips.push(`${dayLabel}の水分が ${todayWater}ml です。あと ${2000 - todayWater}ml 飲むと理想的です。`);
     } else {
       tips.push(`水分補給バッチリ！${todayWater}ml 摂取済みです。`);
     }
     // 運動
     if (totalBurned === 0) {
-      tips.push("今日はまだ運動の記録がありません。軽いウォーキングだけでも効果があります！");
+      tips.push(`${dayLabel}はまだ運動の記録がありません。軽いウォーキングだけでも効果があります！`);
     } else if (totalBurned < 200) {
-      tips.push(`今日は ${totalBurned}kcal 消費しました。もう少し動くとさらに効果的です。`);
+      tips.push(`${dayLabel}は ${totalBurned}kcal 消費しました。もう少し動くとさらに効果的です。`);
     } else {
-      tips.push(`今日は ${totalBurned}kcal 消費！素晴らしい運動量です。`);
+      tips.push(`${dayLabel}は ${totalBurned}kcal 消費！素晴らしい運動量です。`);
     }
     // 体重トレンド
     if (weights.length >= 2) {
@@ -812,12 +813,7 @@ export default function App() {
               {/* カロリー直接入力（食品未選択 or 上書き） */}
               <input style={inp} type="tel" placeholder={mealCalPer100g ? "カロリー（自動計算 or 手動修正）" : "カロリー（kcal）"}
                 value={mealCal} onChange={e => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
-              <button onClick={() => {
-                addMeal();
-                setMealGrams("");
-                setMealCalPer100g(null);
-                setGramSuggestions([]);
-              }} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
+              <button onClick={() => addMeal()} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
             </div>
           </div>
 
@@ -972,9 +968,11 @@ export default function App() {
                 <div style={{ fontSize: 24, fontWeight: "900", color: C.orange }}>{goal.calLimit}<span style={{ fontSize: 10, color: C.sub }}> kcal</span></div>
               </div>
             </div>
-            <div style={{ background: `${C.green}0D`, border: `1px solid ${C.green}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
+            <div style={{ background: `${Number(weightLeft) <= 0 ? C.green : C.orange}0D`, border: `1px solid ${Number(weightLeft) <= 0 ? C.green : C.orange}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
               <div style={{ fontSize: 11, color: C.sub, marginBottom: 4 }}>REMAINING</div>
-              <div style={{ fontSize: 30, fontWeight: "900", color: C.green }}>あと {weightLeft} kg！</div>
+              <div style={{ fontSize: 30, fontWeight: "900", color: Number(weightLeft) <= 0 ? C.green : C.orange }}>
+                {Number(weightLeft) <= 0 ? "🎉 目標達成！" : `あと ${weightLeft} kg！`}
+              </div>
             </div>
           </div>
 
