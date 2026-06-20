@@ -30,6 +30,13 @@ const FOOD_DB = [
   { name: "牛乳（200ml）", cal: 134 }, { name: "ヨーグルト", cal: 100 },
   { name: "プロテイン", cal: 120 }, { name: "味噌汁", cal: 40 },
   { name: "ハンバーガー", cal: 450 }, { name: "コーヒー（無糖）", cal: 5 },
+  // 酒類
+  { name: "ビール（350ml缶）", cal: 140 }, { name: "ビール（500ml缶）", cal: 200 },
+  { name: "ハイボール（350ml缶）", cal: 140 }, { name: "ハイボール（500ml缶）", cal: 195 },
+  { name: "焼酎（1杯/60ml）", cal: 85 }, { name: "焼酎水割り（1杯）", cal: 60 },
+  { name: "チューハイ（350ml缶）", cal: 140 }, { name: "レモンサワー（350ml缶）", cal: 130 },
+  { name: "日本酒（1合/180ml）", cal: 185 }, { name: "ワイン（1杯/120ml）", cal: 88 },
+  { name: "ウイスキー（1杯/30ml）", cal: 70 }, { name: "梅酒（1杯/60ml）", cal: 82 },
 ];
 
 const C = {
