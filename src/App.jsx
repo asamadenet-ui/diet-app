@@ -416,6 +416,7 @@ export default function App() {
   const [goalHeight, setGoalHeight] = useState("");
   const [memos, setMemos] = useState(saved?.memos ?? []);
   const [memoInput, setMemoInput] = useState("");
+  const [mealType, setMealType] = useState("朝食");
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
   const [mealGrams, setMealGrams] = useState("");
@@ -498,7 +499,7 @@ export default function App() {
     if (!n || !c) return;
     updateDay(day => ({
       ...day,
-      meals: [...day.meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: mealColors[day.meals.length % mealColors.length] }]
+      meals: [...day.meals, { id: Date.now(), name: String(n).trim(), cal: Number(c), time: new Date().toTimeString().slice(0, 5), color: mealColors[day.meals.length % mealColors.length], type: mealType }]
     }));
     setMealName(""); setMealCal(""); setMealGrams(""); setMealCalPer100g(null); setGramSuggestions([]);
   };
@@ -747,6 +748,29 @@ export default function App() {
 
         {/* MEAL */}
         {tab === 1 && <>
+          {/* 食事区分セレクター */}
+          {(() => {
+            const MEAL_TYPES = [
+              { label: "🌅 朝食", key: "朝食", color: C.yellow },
+              { label: "☀️ 昼食", key: "昼食", color: C.orange },
+              { label: "🌙 夕食", key: "夕食", color: C.blue },
+              { label: "🍩 間食", key: "間食", color: C.purple },
+            ];
+            return (
+              <div style={{ ...card, padding: "14px 20px" }}>
+                <div style={sec}>🍽 MEAL TYPE</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {MEAL_TYPES.map(t => (
+                    <button key={t.key} onClick={() => setMealType(t.key)}
+                      style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: `2px solid ${mealType === t.key ? t.color : C.border}`, background: mealType === t.key ? `${t.color}22` : C.card2, color: mealType === t.key ? t.color : C.sub, fontWeight: "800", fontSize: 11, cursor: "pointer", lineHeight: 1.4 }}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           <div style={card}>
             <div style={sec}>📷 AI CALORIE SCAN</div>
             <CalorieCamera onAdd={(name, cal) => addMeal(name, cal)} apiKey={apiKey} />
@@ -770,7 +794,6 @@ export default function App() {
           <div style={card}>
             <div style={sec}>✏️ MANUAL INPUT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {/* 食品名 + グラム計算 */}
               <div style={{ position: "relative" }}>
                 <input style={inp} type="text" placeholder="食品名（例：鶏胸肉）" value={mealName}
                   onChange={e => {
@@ -787,12 +810,8 @@ export default function App() {
                 {gramSuggestions.length > 0 && (
                   <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: C.card2, border: `1px solid ${C.border}`, borderRadius: 8, zIndex: 10, maxHeight: 200, overflowY: "auto" }}>
                     {gramSuggestions.map((f, i) => (
-                      <div key={i} onClick={() => {
-                        setMealName(f.name);
-                        setMealCalPer100g(f.cal);
-                        setGramSuggestions([]);
-                        setMealCal("");
-                      }} style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
+                      <div key={i} onClick={() => { setMealName(f.name); setMealCalPer100g(f.cal); setGramSuggestions([]); setMealCal(""); }}
+                        style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
                         <span style={{ color: C.text, fontSize: 13 }}>{f.name}</span>
                         <span style={{ color: C.sub, fontSize: 12 }}>{f.cal}kcal/100g</span>
                       </div>
@@ -800,57 +819,102 @@ export default function App() {
                   </div>
                 )}
               </div>
-              {/* グラム入力（食品選択後に表示） */}
               {mealCalPer100g !== null && (
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input style={{ ...inp, flex: 1 }} type="tel" placeholder="グラム数"
-                    value={mealGrams}
-                    onChange={e => {
-                      const g = e.target.value.replace(/[^0-9.]/g, "");
-                      setMealGrams(g);
-                      if (g) setMealCal(String(Math.round(mealCalPer100g * parseFloat(g) / 100)));
-                      else setMealCal("");
-                    }} />
+                  <input style={{ ...inp, flex: 1 }} type="tel" placeholder="グラム数" value={mealGrams}
+                    onChange={e => { const g = e.target.value.replace(/[^0-9.]/g, ""); setMealGrams(g); if (g) setMealCal(String(Math.round(mealCalPer100g * parseFloat(g) / 100))); else setMealCal(""); }} />
                   <span style={{ color: C.sub, fontSize: 12, whiteSpace: "nowrap" }}>g</span>
-                  {mealCal ? (
-                    <span style={{ color: C.orange, fontWeight: "700", fontSize: 16, whiteSpace: "nowrap" }}>{mealCal} kcal</span>
-                  ) : (
-                    <span style={{ color: C.sub, fontSize: 12, whiteSpace: "nowrap" }}>{mealCalPer100g}kcal/100g</span>
-                  )}
+                  {mealCal ? <span style={{ color: C.orange, fontWeight: "700", fontSize: 16, whiteSpace: "nowrap" }}>{mealCal} kcal</span>
+                    : <span style={{ color: C.sub, fontSize: 12, whiteSpace: "nowrap" }}>{mealCalPer100g}kcal/100g</span>}
                 </div>
               )}
-              {/* カロリー直接入力（食品未選択 or 上書き） */}
               <input style={inp} type="tel" placeholder={mealCalPer100g ? "カロリー（自動計算 or 手動修正）" : "カロリー（kcal）"}
                 value={mealCal} onChange={e => setMealCal(e.target.value.replace(/[^0-9]/g, ""))} />
               <button onClick={() => addMeal()} style={sportBtn(C.orange)}>➕ ADD MEAL</button>
             </div>
           </div>
 
+          {/* 食事記録（区分別グループ表示） */}
           <div style={card}>
             <div style={sec}>📋 TODAY'S MEALS</div>
-            {dayData.meals.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
-            {dayData.meals.map(m => (
-              <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 4, height: 36, borderRadius: 2, background: m.color }} />
-                  <div>
-                    <div style={{ fontWeight: "700", fontSize: 14 }}>{m.name}</div>
-                    <div style={{ fontSize: 11, color: C.sub }}>{m.time}</div>
+            {(() => {
+              const MEAL_TYPES = [
+                { key: "朝食", icon: "🌅", color: C.yellow },
+                { key: "昼食", icon: "☀️", color: C.orange },
+                { key: "夕食", icon: "🌙", color: C.blue },
+                { key: "間食", icon: "🍩", color: C.purple },
+              ];
+              const allMeals = dayData.meals;
+              if (allMeals.length === 0) return <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>;
+              return (
+                <>
+                  {MEAL_TYPES.map(t => {
+                    const meals = allMeals.filter(m => (m.type ?? "朝食") === t.key);
+                    if (meals.length === 0) return null;
+                    const subTotal = meals.reduce((s, m) => s + m.cal, 0);
+                    return (
+                      <div key={t.key} style={{ marginBottom: 12 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0 4px", borderBottom: `2px solid ${t.color}44` }}>
+                          <span style={{ fontSize: 13, fontWeight: "900", color: t.color }}>{t.icon} {t.key}</span>
+                          <span style={{ fontSize: 12, color: t.color, fontWeight: "700" }}>{subTotal} kcal</span>
+                        </div>
+                        {meals.map(m => (
+                          <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0 10px 8px", borderBottom: `1px solid ${C.border}` }}>
+                            <div>
+                              <div style={{ fontWeight: "700", fontSize: 14 }}>{m.name}</div>
+                              <div style={{ fontSize: 11, color: C.sub }}>{m.time}</div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={badge(t.color)}>{m.cal} kcal</span>
+                              <button onClick={() => updateDay(day => ({ ...day, meals: day.meals.filter(x => x.id !== m.id) }))}
+                                style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  <div style={{ paddingTop: 8, fontWeight: "900", display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: C.sub }}>TOTAL</span>
+                    <span style={{ color: C.orange }}>{totalCal} kcal</span>
                   </div>
+                </>
+              );
+            })()}
+          </div>
+
+          {/* 当日まとめ */}
+          <div style={card}>
+            <div style={sec}>📓 DAY SUMMARY</div>
+            {/* 運動まとめ */}
+            {dayData.exercises.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: C.green, fontWeight: "900", marginBottom: 6 }}>🏃 運動記録</div>
+                {dayData.exercises.map(e => (
+                  <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "4px 0", color: C.sub }}>
+                    <span>{e.name}</span>
+                    <span style={{ color: C.green }}>−{e.burned} kcal</span>
+                  </div>
+                ))}
+                <div style={{ fontSize: 12, color: C.sub, textAlign: "right", marginTop: 4 }}>
+                  合計 <span style={{ color: C.green, fontWeight: "700" }}>−{totalBurned} kcal</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={badge(m.color)}>{m.cal} kcal</span>
-                  <button onClick={() => updateDay(day => ({ ...day, meals: day.meals.filter(x => x.id !== m.id) }))}
-                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
-                </div>
-              </div>
-            ))}
-            {dayData.meals.length > 0 && (
-              <div style={{ paddingTop: 12, fontWeight: "900", display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: C.sub }}>TOTAL</span>
-                <span style={{ color: C.orange }}>{totalCal} kcal</span>
               </div>
             )}
+            {/* 水分まとめ */}
+            {todayWater > 0 && (
+              <div style={{ marginBottom: 12, fontSize: 13, color: C.sub }}>
+                💧 水分: <span style={{ color: C.blue, fontWeight: "700" }}>{todayWater} ml</span>
+              </div>
+            )}
+            {/* 日メモ */}
+            <div style={{ fontSize: 12, color: C.sub, marginBottom: 6, fontWeight: "700" }}>📝 今日のメモ</div>
+            <textarea
+              style={{ ...inp, height: 80, resize: "none", lineHeight: 1.6, fontSize: 14 }}
+              placeholder="体調・気づき・食べた感想など…"
+              value={dayData.note ?? ""}
+              onChange={e => updateDay(day => ({ ...day, note: e.target.value }))}
+            />
           </div>
         </>}
 
