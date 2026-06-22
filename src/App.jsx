@@ -884,38 +884,120 @@ export default function App() {
           </div>
 
           {/* 当日まとめ */}
-          <div style={card}>
-            <div style={sec}>📓 DAY SUMMARY</div>
-            {/* 運動まとめ */}
-            {dayData.exercises.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: C.green, fontWeight: "900", marginBottom: 6 }}>🏃 運動記録</div>
-                {dayData.exercises.map(e => (
-                  <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "4px 0", color: C.sub }}>
-                    <span>{e.name}</span>
-                    <span style={{ color: C.green }}>−{e.burned} kcal</span>
+          {(() => {
+            const MEAL_TYPES_SUM = [
+              { key: "朝食", icon: "🌅", color: C.yellow },
+              { key: "昼食", icon: "☀️", color: C.orange },
+              { key: "夕食", icon: "🌙", color: C.blue },
+              { key: "間食", icon: "🍩", color: C.purple },
+            ];
+            const netCal2 = totalCal - totalBurned;
+            const netColor = netCal2 < 0 ? C.green : netCal2 > 2200 ? C.red : C.orange;
+            const RATINGS = ["😞","😐","🙂","😄","🔥"];
+            return (
+              <div style={card}>
+                <div style={sec}>📓 DAY SUMMARY</div>
+
+                {/* ① カロリー全体 */}
+                <div style={{ background: C.card2, borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, color: C.sub, fontWeight: "700", marginBottom: 10, letterSpacing: 1 }}>CALORIE BALANCE</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: C.sub, marginBottom: 2 }}>摂取</div>
+                      <div style={{ fontSize: 22, fontWeight: "900", color: C.orange }}>{totalCal}</div>
+                      <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
+                    </div>
+                    <div style={{ fontSize: 20, color: C.sub2 }}>−</div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: C.sub, marginBottom: 2 }}>消費</div>
+                      <div style={{ fontSize: 22, fontWeight: "900", color: C.green }}>{totalBurned}</div>
+                      <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
+                    </div>
+                    <div style={{ fontSize: 20, color: C.sub2 }}>=</div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 11, color: C.sub, marginBottom: 2 }}>収支</div>
+                      <div style={{ fontSize: 22, fontWeight: "900", color: netColor }}>{netCal2 > 0 ? "+" : ""}{netCal2}</div>
+                      <div style={{ fontSize: 10, color: C.sub }}>kcal</div>
+                    </div>
                   </div>
-                ))}
-                <div style={{ fontSize: 12, color: C.sub, textAlign: "right", marginTop: 4 }}>
-                  合計 <span style={{ color: C.green, fontWeight: "700" }}>−{totalBurned} kcal</span>
+                </div>
+
+                {/* ② 食事内訳 */}
+                {dayData.meals.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, color: C.orange, fontWeight: "900", marginBottom: 8 }}>🍽 食事内訳</div>
+                    {MEAL_TYPES_SUM.map(t => {
+                      const meals = dayData.meals.filter(m => (m.type ?? "朝食") === t.key);
+                      if (meals.length === 0) return null;
+                      const sub = meals.reduce((s, m) => s + m.cal, 0);
+                      return (
+                        <div key={t.key} style={{ marginBottom: 8 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                            <span style={{ color: t.color, fontWeight: "700" }}>{t.icon} {t.key}</span>
+                            <span style={{ color: t.color, fontWeight: "700" }}>{sub} kcal</span>
+                          </div>
+                          {meals.map(m => (
+                            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "2px 8px", color: C.sub }}>
+                              <span>{m.time} {m.name}</span>
+                              <span>{m.cal} kcal</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* ③ 運動記録 */}
+                {dayData.exercises.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, color: C.green, fontWeight: "900", marginBottom: 6 }}>🏃 運動記録</div>
+                    {dayData.exercises.map(e => (
+                      <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "3px 0", color: C.sub }}>
+                        <span>{e.time} {e.name}</span>
+                        <span style={{ color: C.green }}>−{e.burned} kcal</span>
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 12, color: C.sub, textAlign: "right", marginTop: 4, borderTop: `1px solid ${C.border}`, paddingTop: 4 }}>
+                      消費合計 <span style={{ color: C.green, fontWeight: "700" }}>−{totalBurned} kcal</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* ④ 水分 */}
+                {todayWater > 0 && (
+                  <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                    <span style={{ color: C.sub }}>💧 水分摂取</span>
+                    <span style={{ color: C.blue, fontWeight: "700" }}>{todayWater} ml</span>
+                  </div>
+                )}
+
+                {/* ⑤ 今日の評価 */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: C.sub, fontWeight: "700", marginBottom: 8 }}>⭐ 今日の評価</div>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                    {RATINGS.map((emoji, i) => (
+                      <button key={i} onClick={() => updateDay(day => ({ ...day, rating: i }))}
+                        style={{ fontSize: 28, background: "none", border: `2px solid ${(dayData.rating ?? -1) === i ? C.orange : C.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", opacity: (dayData.rating ?? -1) === i ? 1 : 0.45 }}>
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ⑥ メモ・感想 */}
+                <div>
+                  <div style={{ fontSize: 12, color: C.sub, fontWeight: "700", marginBottom: 6 }}>📝 メモ・感想</div>
+                  <textarea
+                    style={{ ...inp, height: 100, resize: "none", lineHeight: 1.7, fontSize: 14 }}
+                    placeholder={"体調・食べた感想・気づき・明日の目標など…"}
+                    value={dayData.note ?? ""}
+                    onChange={e => updateDay(day => ({ ...day, note: e.target.value }))}
+                  />
                 </div>
               </div>
-            )}
-            {/* 水分まとめ */}
-            {todayWater > 0 && (
-              <div style={{ marginBottom: 12, fontSize: 13, color: C.sub }}>
-                💧 水分: <span style={{ color: C.blue, fontWeight: "700" }}>{todayWater} ml</span>
-              </div>
-            )}
-            {/* 日メモ */}
-            <div style={{ fontSize: 12, color: C.sub, marginBottom: 6, fontWeight: "700" }}>📝 今日のメモ</div>
-            <textarea
-              style={{ ...inp, height: 80, resize: "none", lineHeight: 1.6, fontSize: 14 }}
-              placeholder="体調・気づき・食べた感想など…"
-              value={dayData.note ?? ""}
-              onChange={e => updateDay(day => ({ ...day, note: e.target.value }))}
-            />
-          </div>
+            );
+          })()}
         </>}
 
         {/* TRAIN */}
