@@ -402,10 +402,19 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(TODAY);
   const [days, setDays] = useState(() => loadData()?.days ?? {});
   const [fastActive, setFastActive] = useState(() => loadData()?.fastActive ?? false);
-  const [fastElapsed, setFastElapsed] = useState(() => loadData()?.fastElapsed ?? 0);
   const [fastGoal, setFastGoal] = useState(() => loadData()?.fastGoal ?? 16);
   const [fastStartTime, setFastStartTime] = useState(() => loadData()?.fastStartTime ?? null);
   const [fastBaseElapsed, setFastBaseElapsed] = useState(() => loadData()?.fastBaseElapsed ?? 0);
+  const [fastElapsed, setFastElapsed] = useState(() => {
+    const d = loadData();
+    if (!d) return 0;
+    // 保存された fastElapsed は過去のバグで破損している可能性があるため使わない
+    // fastBaseElapsed と fastStartTime から正確に再計算する
+    if (d.fastActive && d.fastStartTime) {
+      return (d.fastBaseElapsed ?? 0) + Math.floor((Date.now() - d.fastStartTime) / 1000);
+    }
+    return d.fastBaseElapsed ?? 0;
+  });
   const [fastNotified, setFastNotified] = useState(false);
   const timerRef = useRef(null);
   const [goal, setGoal] = useState(() => loadData()?.goal ?? { target: 60, calLimit: 2000, height: 170 });
