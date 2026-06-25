@@ -428,9 +428,9 @@ export default function App() {
   const [weightInput, setWeightInput] = useState("");
   const [apiKey, setApiKey] = useState(localStorage.getItem("anthropicKey") ?? "");
   const [aiAdvice, setAiAdvice] = useState([]);
-  const [tdeeAge, setTdeeAge] = useState(saved?.tdeeProfile?.age ?? "");
-  const [tdeeSex, setTdeeSex] = useState(saved?.tdeeProfile?.sex ?? "female");
-  const [tdeeActivity, setTdeeActivity] = useState(saved?.tdeeProfile?.activity ?? 1.55);
+  const [tdeeAge, setTdeeAge] = useState(() => loadData()?.tdeeProfile?.age ?? "");
+  const [tdeeSex, setTdeeSex] = useState(() => loadData()?.tdeeProfile?.sex ?? "female");
+  const [tdeeActivity, setTdeeActivity] = useState(() => loadData()?.tdeeProfile?.activity ?? 1.55);
 
   const getDayData = (date) => {
     const d = days[date];
