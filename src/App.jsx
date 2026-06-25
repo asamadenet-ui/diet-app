@@ -432,7 +432,11 @@ export default function App() {
   const [tdeeSex, setTdeeSex] = useState(saved?.tdeeProfile?.sex ?? "female");
   const [tdeeActivity, setTdeeActivity] = useState(saved?.tdeeProfile?.activity ?? 1.55);
 
-  const getDayData = (date) => days[date] ?? { meals: [], exercises: [], water: 0 };
+  const getDayData = (date) => {
+    const d = days[date];
+    if (!d) return { meals: [], exercises: [], water: 0 };
+    return { meals: d.meals ?? [], exercises: d.exercises ?? [], water: d.water ?? 0, note: d.note, rating: d.rating };
+  };
   const dayData = getDayData(currentDate);
   const updateDay = (updater) => {
     setDays(prev => ({ ...prev, [currentDate]: updater(getDayData(currentDate)) }));
