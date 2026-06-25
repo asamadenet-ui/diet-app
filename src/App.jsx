@@ -398,23 +398,22 @@ function CalorieCamera({ onAdd, apiKey }) {
 }
 
 export default function App() {
-  const saved = loadData();
   const [tab, setTab] = useState(0);
   const [currentDate, setCurrentDate] = useState(TODAY);
-  const [days, setDays] = useState(saved?.days ?? {});
-  const [fastActive, setFastActive] = useState(saved?.fastActive ?? false);
-  const [fastElapsed, setFastElapsed] = useState(saved?.fastElapsed ?? 0);
-  const [fastGoal, setFastGoal] = useState(saved?.fastGoal ?? 16);
-  const [fastStartTime, setFastStartTime] = useState(saved?.fastStartTime ?? null);
-  const [fastBaseElapsed, setFastBaseElapsed] = useState(saved?.fastBaseElapsed ?? 0);
+  const [days, setDays] = useState(() => loadData()?.days ?? {});
+  const [fastActive, setFastActive] = useState(() => loadData()?.fastActive ?? false);
+  const [fastElapsed, setFastElapsed] = useState(() => loadData()?.fastElapsed ?? 0);
+  const [fastGoal, setFastGoal] = useState(() => loadData()?.fastGoal ?? 16);
+  const [fastStartTime, setFastStartTime] = useState(null);
+  const [fastBaseElapsed, setFastBaseElapsed] = useState(() => loadData()?.fastBaseElapsed ?? 0);
   const [fastNotified, setFastNotified] = useState(false);
   const timerRef = useRef(null);
-  const [goal, setGoal] = useState(saved?.goal ?? { target: 60, calLimit: 2000, height: 170 });
-  const [weights, setWeights] = useState(saved?.weights ?? []);
+  const [goal, setGoal] = useState(() => loadData()?.goal ?? { target: 60, calLimit: 2000, height: 170 });
+  const [weights, setWeights] = useState(() => loadData()?.weights ?? []);
   const [goalTarget, setGoalTarget] = useState("");
   const [goalCalInput, setGoalCalInput] = useState("");
   const [goalHeight, setGoalHeight] = useState("");
-  const [memos, setMemos] = useState(saved?.memos ?? []);
+  const [memos, setMemos] = useState(() => loadData()?.memos ?? []);
   const [memoInput, setMemoInput] = useState("");
   const [mealType, setMealType] = useState("朝食");
   const [mealName, setMealName] = useState("");
