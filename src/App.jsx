@@ -15,11 +15,11 @@ const TAB_LABELS = ["HOME", "MEAL", "TRAIN", "WEIGHT", "MEMO", "GOAL"];
 
 const EXERCISES = [
   { icon: "🏃", name: "ジョギング", met: 7.0 },
+  { icon: "🚶", name: "ウォーキング", met: 3.5 },
   { icon: "🚴", name: "サイクリング", met: 6.0 },
   { icon: "🏊", name: "水泳", met: 8.0 },
   { icon: "🧘", name: "ヨガ", met: 3.0 },
   { icon: "💪", name: "筋トレ", met: 5.0 },
-  { icon: "🏋️", name: "ウォーキング", met: 3.5 },
 ];
 
 const FOOD_CAL_PER_100G = [
