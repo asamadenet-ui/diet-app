@@ -444,7 +444,7 @@ export default function App() {
   const getDayData = (date) => {
     const d = days[date];
     if (!d) return { meals: [], exercises: [], water: 0 };
-    return { meals: d.meals ?? [], exercises: d.exercises ?? [], water: d.water ?? 0, note: d.note, rating: d.rating };
+    return { meals: d.meals ?? [], exercises: d.exercises ?? [], water: d.water ?? 0, steps: d.steps ?? 0, note: d.note, rating: d.rating };
   };
   const dayData = getDayData(currentDate);
   const updateDay = (updater) => {
@@ -516,19 +516,19 @@ export default function App() {
     setMealName(""); setMealCal(""); setMealGrams(""); setMealCalPer100g(null); setGramSuggestions([]);
   };
 
+  const addSteps = () => {
+    if (!stepsInput) return;
+    updateDay(day => ({ ...day, steps: (day.steps || 0) + Number(stepsInput) }));
+    setStepsInput("");
+  };
+
   const addExercise = () => {
+    if (!exerciseMinutes) return;
     const w = weights.length > 0 ? weights[weights.length - 1].weight : 60;
-    if (stepsInput) {
-      const steps = Number(stepsInput);
-      const burned = calcStepCalories(steps, w);
-      updateDay(day => ({ ...day, exercises: [...day.exercises, { id: Date.now(), name: `🚶 ${steps.toLocaleString()}歩`, burned, time: new Date().toTimeString().slice(0, 5) }] }));
-      setStepsInput("");
-    } else if (exerciseMinutes) {
-      const mins = Number(exerciseMinutes);
-      const burned = Math.round(selectedExercise.met * w * mins / 60);
-      updateDay(day => ({ ...day, exercises: [...day.exercises, { id: Date.now(), name: `${selectedExercise.icon} ${selectedExercise.name} ${mins}分`, burned, time: new Date().toTimeString().slice(0, 5) }] }));
-      setExerciseMinutes("");
-    }
+    const mins = Number(exerciseMinutes);
+    const burned = Math.round(selectedExercise.met * w * mins / 60);
+    updateDay(day => ({ ...day, exercises: [...day.exercises, { id: Date.now(), name: `${selectedExercise.icon} ${selectedExercise.name} ${mins}分`, burned, time: new Date().toTimeString().slice(0, 5) }] }));
+    setExerciseMinutes("");
   };
 
   const addWater = (ml) => updateDay(day => ({ ...day, water: (day.water || 0) + ml }));
@@ -1014,36 +1014,49 @@ export default function App() {
 
         {/* TRAIN */}
         {tab === 2 && <>
+          {/* STEPS：歩数のみ記録（カロリー計算なし） */}
           <div style={card}>
             <div style={sec}>🚶 STEPS</div>
-            <div style={{ fontSize: 12, color: C.sub, marginBottom: 10 }}>歩数からウォーキングのカロリーを自動計算します。ウォーキング（WORKOUT）との重複入力に注意してください。</div>
-            <input style={{ ...inp, marginBottom: 12 }} type="tel" placeholder="歩数（例: 8000）" value={stepsInput} onChange={e => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))} />
-            <button onClick={addExercise} style={sportBtn(C.green)}>➕ ADD STEPS</button>
+            {dayData.steps > 0 && (
+              <div style={{ textAlign: "center", marginBottom: 14 }}>
+                <span style={{ fontSize: 40, fontWeight: "900", color: C.blue }}>{dayData.steps.toLocaleString()}</span>
+                <span style={{ fontSize: 14, color: C.sub }}> 歩</span>
+                <div style={{ fontSize: 11, color: C.sub, marginTop: 4 }}>参考: 約{Math.round(calcStepCalories(dayData.steps, weights.length > 0 ? weights[weights.length-1].weight : 60))} kcal相当</div>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <input style={{ ...inp, flex: 1 }} type="tel" placeholder="歩数（例: 8000）" value={stepsInput} onChange={e => setStepsInput(e.target.value.replace(/[^0-9]/g, ""))} />
+              <button onClick={addSteps} style={sportBtn(C.blue, { flex: "none", padding: "14px 20px", width: "auto" })}>➕</button>
+            </div>
+            {dayData.steps > 0 && (
+              <button onClick={() => updateDay(day => ({ ...day, steps: 0 }))} style={{ marginTop: 10, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 12, cursor: "pointer" }}>🔄 リセット</button>
+            )}
           </div>
+
+          {/* WORKOUT：運動種目＋時間でカロリー計算 */}
           <div style={card}>
             <div style={sec}>💪 WORKOUT</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <select value={selectedExercise.name} onChange={e => setSelectedExercise(EXERCISES.find(ex => ex.name === e.target.value))} style={inp}>
                 {EXERCISES.map(ex => <option key={ex.name} value={ex.name}>{ex.icon} {ex.name}</option>)}
               </select>
-              {selectedExercise.name === "ウォーキング" && dayData.exercises.some(e => e.name.includes("歩")) && (
-                <div style={{ background: `${C.yellow}22`, border: `1px solid ${C.yellow}66`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.yellow }}>
-                  ⚠️ 今日すでに歩数が記録されています。ウォーキングを追加するとダブルカウントになります。歩数かウォーキングのどちらか一方のみ記録してください。
-                </div>
-              )}
               <input style={inp} type="tel" placeholder="時間（分）" value={exerciseMinutes} onChange={e => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))} />
+              {exerciseMinutes ? (
+                <div style={{ background: `${C.green}11`, border: `1px solid ${C.green}44`, borderRadius: 10, padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, color: C.sub }}>{selectedExercise.icon} {selectedExercise.name} {exerciseMinutes}分</span>
+                  <span style={{ fontSize: 20, fontWeight: "900", color: C.green }}>
+                    −{Math.round(selectedExercise.met * (weights.length > 0 ? weights[weights.length-1].weight : 60) * Number(exerciseMinutes) / 60)} kcal
+                  </span>
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: C.sub, textAlign: "center" }}>時間を入れるとカロリーが表示されます</div>
+              )}
               <button onClick={addExercise} style={sportBtn(C.green)}>🔥 ADD WORKOUT</button>
             </div>
           </div>
           <div style={card}>
             <div style={sec}>📋 TODAY'S TRAINING</div>
-            {/* ダブルカウント警告 */}
-            {dayData.exercises.some(e => e.name.includes("歩")) && dayData.exercises.some(e => e.name.includes("ウォーキング")) && (
-              <div style={{ background: `${C.red}22`, border: `1px solid ${C.red}66`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: C.red, marginBottom: 12 }}>
-                ⚠️ 歩数とウォーキングが両方記録されています。どちらかを × で削除してダブルカウントを解消してください。
-              </div>
-            )}
-            {dayData.exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
+{dayData.exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 13 }}>記録なし</div>}
             {dayData.exercises.map(e => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
