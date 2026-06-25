@@ -404,7 +404,7 @@ export default function App() {
   const [fastActive, setFastActive] = useState(() => loadData()?.fastActive ?? false);
   const [fastElapsed, setFastElapsed] = useState(() => loadData()?.fastElapsed ?? 0);
   const [fastGoal, setFastGoal] = useState(() => loadData()?.fastGoal ?? 16);
-  const [fastStartTime, setFastStartTime] = useState(null);
+  const [fastStartTime, setFastStartTime] = useState(() => loadData()?.fastStartTime ?? null);
   const [fastBaseElapsed, setFastBaseElapsed] = useState(() => loadData()?.fastBaseElapsed ?? 0);
   const [fastNotified, setFastNotified] = useState(false);
   const timerRef = useRef(null);
