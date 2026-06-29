@@ -424,6 +424,8 @@ export default function App() {
   const [goalHeight, setGoalHeight] = useState("");
   const [memos, setMemos] = useState(() => loadData()?.memos ?? []);
   const [memoInput, setMemoInput] = useState("");
+  const [medList, setMedList] = useState(() => loadData()?.medList ?? []);
+  const [medInput, setMedInput] = useState("");
   const [mealType, setMealType] = useState("朝食");
   const [mealName, setMealName] = useState("");
   const [mealCal, setMealCal] = useState("");
@@ -444,7 +446,7 @@ export default function App() {
   const getDayData = (date) => {
     const d = days[date];
     if (!d) return { meals: [], exercises: [], water: 0 };
-    return { meals: d.meals ?? [], exercises: d.exercises ?? [], water: d.water ?? 0, steps: d.steps ?? 0, note: d.note, rating: d.rating };
+    return { meals: d.meals ?? [], exercises: d.exercises ?? [], water: d.water ?? 0, steps: d.steps ?? 0, takenMeds: d.takenMeds ?? [], note: d.note, rating: d.rating };
   };
   const dayData = getDayData(currentDate);
   const updateDay = (updater) => {
@@ -479,12 +481,12 @@ export default function App() {
   }, [fastActive, fastStartTime, fastBaseElapsed, fastGoal, fastNotified]);
 
   useEffect(() => {
-    const data = { days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, tdeeProfile: { age: tdeeAge, sex: tdeeSex, activity: tdeeActivity } };
+    const data = { days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, medList, tdeeProfile: { age: tdeeAge, sex: tdeeSex, activity: tdeeActivity } };
     saveData(data);
     const handleVisibility = () => { if (document.visibilityState === 'hidden') saveData(data); };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, tdeeAge, tdeeSex, tdeeActivity]);
+  }, [days, fastGoal, fastStartTime, fastBaseElapsed, fastActive, fastElapsed, weights, goal, memos, medList, tdeeAge, tdeeSex, tdeeActivity]);
 
   const requestNotificationPermission = async () => {
     if (Notification.permission === "default") await Notification.requestPermission();
@@ -539,6 +541,17 @@ export default function App() {
     setWeights([...weights.filter((w) => w.date !== currentDate), { date: currentDate, weight: Number(weightInput) }].sort((a, b) => a.date.localeCompare(b.date)));
     setWeightInput("");
   };
+
+  const addMed = () => {
+    if (!medInput.trim()) return;
+    setMedList([...medList, { id: Date.now(), name: medInput.trim() }]);
+    setMedInput("");
+  };
+  const removeMed = (id) => setMedList(medList.filter(m => m.id !== id));
+  const toggleMed = (id) => updateDay(day => {
+    const taken = day.takenMeds ?? [];
+    return { ...day, takenMeds: taken.includes(id) ? taken.filter(x => x !== id) : [...taken, id] };
+  });
 
   const addMemo = () => {
     if (!memoInput.trim()) return;
@@ -754,6 +767,37 @@ export default function App() {
                   <div style={{ fontSize: 10, color: a.done ? C.yellow : C.sub, fontWeight: "800", marginTop: 4 }}>{a.label}</div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* 💊 MEDICATION */}
+          <div style={card}>
+            <div style={sec}>💊 MEDICATION</div>
+            {medList.length === 0 ? (
+              <div style={{ color: C.sub, fontSize: 13, textAlign: "center", padding: "10px 0 14px" }}>薬・サプリを追加してください</div>
+            ) : (
+              medList.map(med => {
+                const taken = dayData.takenMeds.includes(med.id);
+                return (
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+                    <button onClick={() => toggleMed(med.id)}
+                      style={{ display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", flex: 1, textAlign: "left", touchAction: "manipulation" }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 8, background: taken ? C.green : "none", border: `2px solid ${taken ? C.green : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, color: "#fff", fontWeight: "900" }}>
+                        {taken ? "✓" : ""}
+                      </div>
+                      <span style={{ fontSize: 15, color: taken ? C.green : C.text, fontWeight: taken ? "700" : "400" }}>{med.name}</span>
+                    </button>
+                    <button onClick={() => removeMed(med.id)}
+                      style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
+                  </div>
+                );
+              })
+            )}
+            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+              <input style={{ ...inp, flex: 1 }} placeholder="薬・サプリ名（例：血圧の薬）" value={medInput}
+                onChange={e => setMedInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addMed()} />
+              <button onClick={addMed} style={sportBtn(C.purple, { flex: "none", padding: "14px 20px", width: "auto" })}>➕</button>
             </div>
           </div>
         </>}
