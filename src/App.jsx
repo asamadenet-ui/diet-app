@@ -778,8 +778,8 @@ export default function App() {
             {medList.length > 0 && (
               <div style={{ display: "flex", alignItems: "center", paddingBottom: 8, marginBottom: 4, borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ flex: 1 }} />
-                {["朝", "夕"].map(t => (
-                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 12, fontWeight: "900", color: t === "朝" ? C.yellow : C.blue }}>{t}</div>
+                {["朝", "昼", "夕"].map(t => (
+                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 12, fontWeight: "900", color: t === "朝" ? C.yellow : t === "昼" ? C.orange : C.blue }}>{t}</div>
                 ))}
                 <div style={{ width: 36 }} />
               </div>
@@ -792,10 +792,10 @@ export default function App() {
                 return (
                   <div key={med.id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
                     <span style={{ flex: 1, fontSize: 14, color: C.text }}>{med.name}</span>
-                    {["朝", "夕"].map(timing => {
+                    {["朝", "昼", "夕"].map(timing => {
                       const key = `${med.id}_${timing}`;
                       const checked = takenArr.includes(key);
-                      const color = timing === "朝" ? C.yellow : C.blue;
+                      const color = timing === "朝" ? C.yellow : timing === "昼" ? C.orange : C.blue;
                       return (
                         <button key={timing} onClick={() => toggleMed(med.id, timing)}
                           style={{ width: 52, display: "flex", justifyContent: "center", background: "none", border: "none", cursor: "pointer", touchAction: "manipulation" }}>
