@@ -548,9 +548,10 @@ export default function App() {
     setMedInput("");
   };
   const removeMed = (id) => setMedList(medList.filter(m => m.id !== id));
-  const toggleMed = (id) => updateDay(day => {
+  const toggleMed = (id, timing) => updateDay(day => {
     const taken = day.takenMeds ?? [];
-    return { ...day, takenMeds: taken.includes(id) ? taken.filter(x => x !== id) : [...taken, id] };
+    const key = `${id}_${timing}`;
+    return { ...day, takenMeds: taken.includes(key) ? taken.filter(x => x !== key) : [...taken, key] };
   });
 
   const addMemo = () => {
@@ -773,22 +774,39 @@ export default function App() {
           {/* 💊 MEDICATION */}
           <div style={card}>
             <div style={sec}>💊 MEDICATION</div>
+            {/* ヘッダー行 */}
+            {medList.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", paddingBottom: 8, marginBottom: 4, borderBottom: `1px solid ${C.border}` }}>
+                <div style={{ flex: 1 }} />
+                {["朝", "夕"].map(t => (
+                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 12, fontWeight: "900", color: t === "朝" ? C.yellow : C.blue }}>{t}</div>
+                ))}
+                <div style={{ width: 36 }} />
+              </div>
+            )}
             {medList.length === 0 ? (
               <div style={{ color: C.sub, fontSize: 13, textAlign: "center", padding: "10px 0 14px" }}>薬・サプリを追加してください</div>
             ) : (
               medList.map(med => {
-                const taken = dayData.takenMeds.includes(med.id);
+                const takenArr = dayData.takenMeds ?? [];
                 return (
-                  <div key={med.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-                    <button onClick={() => toggleMed(med.id)}
-                      style={{ display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", flex: 1, textAlign: "left", touchAction: "manipulation" }}>
-                      <div style={{ width: 30, height: 30, borderRadius: 8, background: taken ? C.green : "none", border: `2px solid ${taken ? C.green : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, color: "#fff", fontWeight: "900" }}>
-                        {taken ? "✓" : ""}
-                      </div>
-                      <span style={{ fontSize: 15, color: taken ? C.green : C.text, fontWeight: taken ? "700" : "400" }}>{med.name}</span>
-                    </button>
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ flex: 1, fontSize: 14, color: C.text }}>{med.name}</span>
+                    {["朝", "夕"].map(timing => {
+                      const key = `${med.id}_${timing}`;
+                      const checked = takenArr.includes(key);
+                      const color = timing === "朝" ? C.yellow : C.blue;
+                      return (
+                        <button key={timing} onClick={() => toggleMed(med.id, timing)}
+                          style={{ width: 52, display: "flex", justifyContent: "center", background: "none", border: "none", cursor: "pointer", touchAction: "manipulation" }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: checked ? color : "none", border: `2px solid ${checked ? color : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: "#fff", fontWeight: "900" }}>
+                            {checked ? "✓" : ""}
+                          </div>
+                        </button>
+                      );
+                    })}
                     <button onClick={() => removeMed(med.id)}
-                      style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, padding: "8px", touchAction: "manipulation" }}>×</button>
+                      style={{ width: 36, background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 20, touchAction: "manipulation" }}>×</button>
                   </div>
                 );
               })
