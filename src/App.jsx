@@ -184,94 +184,167 @@ const FOOD_CAL_PER_100G = [
 ];
 
 
+const FOOD_CATEGORIES = ["全て","主食","麺類","定食・丼","寿司","肉・揚物","魚・海鮮","野菜・副菜","卵・豆腐","スイーツ","軽食・パン","ドリンク","お酒","焼き鳥","コンビニ","居酒屋"];
 const FOOD_DB = [
-  // 主食・定番
-  { name: "白米（1膳）", cal: 252 }, { name: "おにぎり（1個）", cal: 180 },
-  { name: "食パン（1枚）", cal: 158 },
-  { name: "チャーハン", cal: 600 }, { name: "カレーライス", cal: 700 },
-  // ラーメン
-  { name: "🍜 ラーメン（醤油）", cal: 450 }, { name: "🍜 ラーメン（豚骨）", cal: 550 },
-  { name: "🍜 ラーメン（味噌）", cal: 500 }, { name: "🍜 ラーメン（塩）", cal: 400 },
-  { name: "🍜 つけ麺", cal: 650 }, { name: "🍜 二郎系ラーメン", cal: 900 },
-  // お蕎麦
-  { name: "🍵 もりそば", cal: 250 }, { name: "🍵 ざるそば", cal: 320 },
-  { name: "🍵 かけそば", cal: 310 }, { name: "🍵 たぬきそば", cal: 380 },
-  { name: "🍵 天ぷらそば", cal: 500 }, { name: "🍵 きつねそば", cal: 390 },
-  // うどん
-  { name: "🍵 ざるうどん", cal: 290 }, { name: "🍵 きつねうどん", cal: 390 },
-  { name: "🍵 天ぷらうどん", cal: 500 }, { name: "🍵 カレーうどん", cal: 480 },
-  // パスタ
-  { name: "🍝 パスタ（ナポリタン）", cal: 500 }, { name: "🍝 パスタ（ペペロンチーノ）", cal: 400 },
-  { name: "🍝 パスタ（カルボナーラ）", cal: 620 }, { name: "🍝 パスタ（ミートソース）", cal: 580 },
-  { name: "🍝 パスタ（ボロネーゼ）", cal: 560 }, { name: "🍝 パスタ（アラビアータ）", cal: 430 },
+  // 主食
+  { cat:"主食", name:"白米（1膳）", cal:252 }, { cat:"主食", name:"玄米（1膳）", cal:230 },
+  { cat:"主食", name:"おにぎり 梅（1個）", cal:168 }, { cat:"主食", name:"おにぎり 鮭（1個）", cal:180 },
+  { cat:"主食", name:"おにぎり ツナマヨ（1個）", cal:210 }, { cat:"主食", name:"おにぎり 明太子（1個）", cal:185 },
+  { cat:"主食", name:"チャーハン", cal:600 }, { cat:"主食", name:"オムライス", cal:580 },
+  { cat:"主食", name:"ピラフ", cal:480 }, { cat:"主食", name:"雑炊", cal:200 },
+  { cat:"主食", name:"おかゆ", cal:130 }, { cat:"主食", name:"赤飯（1膳）", cal:310 },
+  { cat:"主食", name:"混ぜご飯（1膳）", cal:290 }, { cat:"主食", name:"お茶漬け", cal:200 },
+  // 麺類
+  { cat:"麺類", name:"ラーメン（醤油）", cal:450 }, { cat:"麺類", name:"ラーメン（豚骨）", cal:550 },
+  { cat:"麺類", name:"ラーメン（味噌）", cal:500 }, { cat:"麺類", name:"ラーメン（塩）", cal:400 },
+  { cat:"麺類", name:"つけ麺", cal:650 }, { cat:"麺類", name:"二郎系ラーメン", cal:900 },
+  { cat:"麺類", name:"担々麺", cal:600 }, { cat:"麺類", name:"冷やし中華", cal:480 },
+  { cat:"麺類", name:"ちゃんぽん", cal:560 }, { cat:"麺類", name:"〆ラーメン", cal:450 },
+  { cat:"麺類", name:"もりそば", cal:250 }, { cat:"麺類", name:"ざるそば", cal:320 },
+  { cat:"麺類", name:"かけそば", cal:310 }, { cat:"麺類", name:"たぬきそば", cal:380 },
+  { cat:"麺類", name:"天ぷらそば", cal:500 }, { cat:"麺類", name:"きつねそば", cal:390 },
+  { cat:"麺類", name:"ざるうどん", cal:290 }, { cat:"麺類", name:"きつねうどん", cal:390 },
+  { cat:"麺類", name:"天ぷらうどん", cal:500 }, { cat:"麺類", name:"カレーうどん", cal:480 },
+  { cat:"麺類", name:"肉うどん", cal:460 }, { cat:"麺類", name:"そうめん（1人前）", cal:320 },
+  { cat:"麺類", name:"パスタ（ナポリタン）", cal:500 }, { cat:"麺類", name:"パスタ（ペペロンチーノ）", cal:400 },
+  { cat:"麺類", name:"パスタ（カルボナーラ）", cal:620 }, { cat:"麺類", name:"パスタ（ミートソース）", cal:580 },
+  { cat:"麺類", name:"パスタ（ボロネーゼ）", cal:560 }, { cat:"麺類", name:"パスタ（アラビアータ）", cal:430 },
+  { cat:"麺類", name:"焼きそば", cal:520 },
   // 定食・丼もの
-  { name: "親子丼", cal: 650 }, { name: "牛丼（並）", cal: 630 },
-  { name: "天丼", cal: 750 }, { name: "カツ丼", cal: 780 },
-  { name: "うな丼", cal: 700 }, { name: "鮭定食", cal: 560 },
-  { name: "とんかつ定食", cal: 950 }, { name: "唐揚げ定食", cal: 850 },
-  { name: "焼き魚定食", cal: 550 }, { name: "しょうが焼き定食", cal: 780 },
-  // お寿司（1貫）
-  { name: "🍣 まぐろ（1貫）", cal: 40 }, { name: "🍣 サーモン（1貫）", cal: 50 },
-  { name: "🍣 はまち（1貫）", cal: 53 }, { name: "🍣 えび（1貫）", cal: 38 },
-  { name: "🍣 いか（1貫）", cal: 38 }, { name: "🍣 ほたて（1貫）", cal: 42 },
-  { name: "🍣 たまご（1貫）", cal: 60 }, { name: "🍣 いくら（1貫）", cal: 75 },
-  { name: "🍣 うに（1貫）", cal: 68 }, { name: "🍣 あなご（1貫）", cal: 58 },
-  { name: "🍣 かっぱ巻き（1本）", cal: 170 }, { name: "🍣 てっかん（1本）", cal: 200 },
-  { name: "🍣 回転寿司1皿（2貫）", cal: 95 }, { name: "🍣 にぎり寿司1人前（8貫）", cal: 480 },
-  // 揚げ物・おかず
-  { name: "唐揚げ（3個）", cal: 300 }, { name: "とんかつ（1枚）", cal: 430 },
-  { name: "エビフライ（2本）", cal: 200 }, { name: "コロッケ（1個）", cal: 180 },
-  { name: "餃子（6個）", cal: 280 }, { name: "シュウマイ（3個）", cal: 130 },
-  { name: "春巻き（1本）", cal: 170 }, { name: "天ぷら盛り合わせ", cal: 400 },
-  // たんぱく質・副菜
-  { name: "サラダチキン", cal: 120 }, { name: "ゆで卵（1個）", cal: 80 },
-  { name: "鶏胸肉（100g）", cal: 108 }, { name: "サーモン（100g）", cal: 133 },
-  { name: "豆腐（1丁）", cal: 168 }, { name: "ブロッコリー（100g）", cal: 33 },
-  { name: "味噌汁", cal: 40 }, { name: "豚汁", cal: 110 },
-  // 軽食・スナック
-  { name: "バナナ（1本）", cal: 86 }, { name: "りんご（1個）", cal: 138 },
-  { name: "牛乳（200ml）", cal: 134 }, { name: "ヨーグルト", cal: 100 },
-  { name: "プロテイン", cal: 120 }, { name: "ハンバーガー", cal: 450 },
-  { name: "コーヒー（無糖）", cal: 5 }, { name: "コーラ（350ml）", cal: 140 },
-  { name: "オレンジジュース（200ml）", cal: 88 },
-  // 焼き鳥（1本あたり）
-  { name: "焼き鳥 もも（1本）", cal: 60 }, { name: "焼き鳥 ねぎま（1本）", cal: 55 },
-  { name: "焼き鳥 皮（1本）", cal: 90 }, { name: "焼き鳥 つくね（1本）", cal: 70 },
-  { name: "焼き鳥 砂肝（1本）", cal: 35 }, { name: "焼き鳥 ハツ（1本）", cal: 45 },
-  { name: "焼き鳥 レバー（1本）", cal: 40 }, { name: "焼き鳥 せせり（1本）", cal: 65 },
-  { name: "焼き鳥 ぼんじり（1本）", cal: 80 }, { name: "焼き鳥 手羽先（1本）", cal: 100 },
-  // 酒類
-  { name: "ビール（350ml缶）", cal: 140 }, { name: "ビール（500ml缶）", cal: 200 },
-  { name: "ハイボール（350ml缶）", cal: 140 }, { name: "ハイボール（500ml缶）", cal: 195 },
-  { name: "焼酎（1杯/60ml）", cal: 85 }, { name: "焼酎水割り（1杯）", cal: 60 },
-  { name: "チューハイ（350ml缶）", cal: 140 }, { name: "レモンサワー（350ml缶）", cal: 130 },
-  { name: "日本酒（1合/180ml）", cal: 185 }, { name: "ワイン（1杯/120ml）", cal: 88 },
-  { name: "ウイスキー（1杯/30ml）", cal: 70 }, { name: "梅酒（1杯/60ml）", cal: 82 },
-  // 焼き魚
-  { name: "鮭の塩焼き", cal: 175 }, { name: "サバの塩焼き", cal: 210 },
-  { name: "アジの塩焼き", cal: 130 }, { name: "サンマの塩焼き", cal: 260 },
-  { name: "タラの塩焼き", cal: 95 }, { name: "ブリの塩焼き", cal: 220 },
-  { name: "ホッケの塩焼き", cal: 180 }, { name: "カレイの塩焼き", cal: 110 },
-  // ジンギスカン・焼肉
-  { name: "ジンギスカン（1人前）", cal: 350 }, { name: "ラム肉（100g）", cal: 198 },
-  { name: "カルビ（100g）", cal: 350 }, { name: "ロース（100g）", cal: 260 },
-  { name: "ハラミ（100g）", cal: 200 }, { name: "牛タン（100g）", cal: 270 },
-  { name: "豚バラ（100g）", cal: 395 }, { name: "ホルモン（100g）", cal: 287 },
-  // カレー・シチュー
-  { name: "カレーライス（普通）", cal: 700 }, { name: "カレーライス（大盛）", cal: 950 },
-  { name: "ビーフカレー", cal: 750 }, { name: "チキンカレー", cal: 680 },
-  { name: "スープカレー", cal: 450 }, { name: "クリームシチュー", cal: 380 },
-  { name: "ビーフシチュー", cal: 420 }, { name: "ポークシチュー", cal: 400 },
-  { name: "コーンシチュー", cal: 350 }, { name: "ハヤシライス", cal: 680 },
-  // 居酒屋メニュー
-  { name: "枝豆（1皿）", cal: 130 }, { name: "冷奴（1丁）", cal: 80 },
-  { name: "もつ煮込み", cal: 180 }, { name: "肉じゃが", cal: 220 },
-  { name: "ポテトフライ（1皿）", cal: 300 }, { name: "たこわさ", cal: 50 },
-  { name: "刺身盛り合わせ", cal: 200 }, { name: "海鮮サラダ", cal: 120 },
-  { name: "だし巻き卵", cal: 150 }, { name: "なめろう", cal: 130 },
-  { name: "キムチ（1皿）", cal: 45 }, { name: "塩辛（1皿）", cal: 60 },
-  { name: "焼きそば", cal: 550 }, { name: "お茶漬け", cal: 200 },
-  { name: "〆ラーメン", cal: 450 }, { name: "〆雑炊", cal: 250 },
+  { cat:"定食・丼", name:"親子丼", cal:650 }, { cat:"定食・丼", name:"牛丼（並）", cal:630 },
+  { cat:"定食・丼", name:"天丼", cal:750 }, { cat:"定食・丼", name:"カツ丼", cal:780 },
+  { cat:"定食・丼", name:"うな丼", cal:700 }, { cat:"定食・丼", name:"うな重", cal:800 },
+  { cat:"定食・丼", name:"海鮮丼", cal:550 }, { cat:"定食・丼", name:"マグロ丼", cal:480 },
+  { cat:"定食・丼", name:"サーモン丼", cal:510 }, { cat:"定食・丼", name:"中華丼", cal:620 },
+  { cat:"定食・丼", name:"豚丼（並）", cal:660 }, { cat:"定食・丼", name:"鉄火丼", cal:530 },
+  { cat:"定食・丼", name:"鮭定食", cal:560 }, { cat:"定食・丼", name:"とんかつ定食", cal:950 },
+  { cat:"定食・丼", name:"唐揚げ定食", cal:850 }, { cat:"定食・丼", name:"焼き魚定食", cal:550 },
+  { cat:"定食・丼", name:"しょうが焼き定食", cal:780 }, { cat:"定食・丼", name:"さば味噌定食", cal:620 },
+  { cat:"定食・丼", name:"幕の内弁当", cal:700 }, { cat:"定食・丼", name:"のり弁", cal:600 },
+  { cat:"定食・丼", name:"カレーライス", cal:700 }, { cat:"定食・丼", name:"カレーライス（大盛）", cal:950 },
+  { cat:"定食・丼", name:"ビーフカレー", cal:750 }, { cat:"定食・丼", name:"スープカレー", cal:450 },
+  { cat:"定食・丼", name:"ハヤシライス", cal:680 },
+  // 寿司
+  { cat:"寿司", name:"まぐろ（1貫）", cal:40 }, { cat:"寿司", name:"サーモン（1貫）", cal:50 },
+  { cat:"寿司", name:"はまち（1貫）", cal:53 }, { cat:"寿司", name:"えび（1貫）", cal:38 },
+  { cat:"寿司", name:"いか（1貫）", cal:38 }, { cat:"寿司", name:"ほたて（1貫）", cal:42 },
+  { cat:"寿司", name:"たまご（1貫）", cal:60 }, { cat:"寿司", name:"いくら（1貫）", cal:75 },
+  { cat:"寿司", name:"うに（1貫）", cal:68 }, { cat:"寿司", name:"あなご（1貫）", cal:58 },
+  { cat:"寿司", name:"かっぱ巻き（1本）", cal:170 }, { cat:"寿司", name:"てっかん（1本）", cal:200 },
+  { cat:"寿司", name:"サーモン巻き（1本）", cal:190 }, { cat:"寿司", name:"回転寿司1皿（2貫）", cal:95 },
+  { cat:"寿司", name:"にぎり寿司1人前（8貫）", cal:480 }, { cat:"寿司", name:"ちらし寿司", cal:580 },
+  { cat:"寿司", name:"稲荷ずし（2個）", cal:200 }, { cat:"寿司", name:"巻き寿司（1本）", cal:350 },
+  // 肉・揚物
+  { cat:"肉・揚物", name:"唐揚げ（3個）", cal:300 }, { cat:"肉・揚物", name:"とんかつ（1枚）", cal:430 },
+  { cat:"肉・揚物", name:"エビフライ（2本）", cal:200 }, { cat:"肉・揚物", name:"コロッケ（1個）", cal:180 },
+  { cat:"肉・揚物", name:"メンチカツ（1個）", cal:250 }, { cat:"肉・揚物", name:"チキンカツ（1枚）", cal:350 },
+  { cat:"肉・揚物", name:"アジフライ（1枚）", cal:200 }, { cat:"肉・揚物", name:"天ぷら盛り合わせ", cal:400 },
+  { cat:"肉・揚物", name:"チキンナゲット（5個）", cal:250 }, { cat:"肉・揚物", name:"ハンバーグ（1個）", cal:250 },
+  { cat:"肉・揚物", name:"ビーフステーキ（200g）", cal:400 }, { cat:"肉・揚物", name:"豚の生姜焼き", cal:280 },
+  { cat:"肉・揚物", name:"チキンソテー", cal:260 }, { cat:"肉・揚物", name:"サラダチキン", cal:120 },
+  { cat:"肉・揚物", name:"鶏胸肉（100g）", cal:108 }, { cat:"肉・揚物", name:"餃子（6個）", cal:280 },
+  { cat:"肉・揚物", name:"シュウマイ（3個）", cal:130 }, { cat:"肉・揚物", name:"春巻き（1本）", cal:170 },
+  { cat:"肉・揚物", name:"焼肉 カルビ（100g）", cal:350 }, { cat:"肉・揚物", name:"焼肉 ロース（100g）", cal:260 },
+  { cat:"肉・揚物", name:"焼肉 ハラミ（100g）", cal:200 }, { cat:"肉・揚物", name:"牛タン（100g）", cal:270 },
+  { cat:"肉・揚物", name:"ホルモン（100g）", cal:287 }, { cat:"肉・揚物", name:"豚バラ（100g）", cal:395 },
+  { cat:"肉・揚物", name:"ジンギスカン（1人前）", cal:350 }, { cat:"肉・揚物", name:"ラム肉（100g）", cal:198 },
+  // 魚・海鮮
+  { cat:"魚・海鮮", name:"鮭の塩焼き（1切）", cal:175 }, { cat:"魚・海鮮", name:"サバの塩焼き（1切）", cal:210 },
+  { cat:"魚・海鮮", name:"アジの塩焼き（1枚）", cal:130 }, { cat:"魚・海鮮", name:"サンマの塩焼き（1尾）", cal:260 },
+  { cat:"魚・海鮮", name:"タラの塩焼き（1切）", cal:95 }, { cat:"魚・海鮮", name:"ブリの塩焼き（1切）", cal:220 },
+  { cat:"魚・海鮮", name:"ホッケの塩焼き", cal:180 }, { cat:"魚・海鮮", name:"カレイの塩焼き", cal:110 },
+  { cat:"魚・海鮮", name:"さばの味噌煮", cal:290 }, { cat:"魚・海鮮", name:"ぶりの照り焼き", cal:260 },
+  { cat:"魚・海鮮", name:"鮭のムニエル", cal:240 }, { cat:"魚・海鮮", name:"タラのムニエル", cal:170 },
+  { cat:"魚・海鮮", name:"刺身盛り合わせ", cal:200 }, { cat:"魚・海鮮", name:"まぐろ刺身（100g）", cal:125 },
+  { cat:"魚・海鮮", name:"サーモン刺身（100g）", cal:133 }, { cat:"魚・海鮮", name:"エビ天（1本）", cal:150 },
+  { cat:"魚・海鮮", name:"牡蠣フライ（3個）", cal:250 }, { cat:"魚・海鮮", name:"シーフードミックス（100g）", cal:80 },
+  { cat:"魚・海鮮", name:"海鮮サラダ", cal:120 }, { cat:"魚・海鮮", name:"なめろう", cal:130 },
+  // 野菜・副菜
+  { cat:"野菜・副菜", name:"サラダ（野菜のみ）", cal:30 }, { cat:"野菜・副菜", name:"シーザーサラダ", cal:200 },
+  { cat:"野菜・副菜", name:"コブサラダ", cal:280 }, { cat:"野菜・副菜", name:"ポテトサラダ", cal:180 },
+  { cat:"野菜・副菜", name:"ブロッコリー（100g）", cal:33 }, { cat:"野菜・副菜", name:"ほうれん草おひたし", cal:30 },
+  { cat:"野菜・副菜", name:"きんぴらごぼう", cal:100 }, { cat:"野菜・副菜", name:"ひじきの煮物", cal:80 },
+  { cat:"野菜・副菜", name:"肉じゃが", cal:220 }, { cat:"野菜・副菜", name:"筑前煮", cal:180 },
+  { cat:"野菜・副菜", name:"かぼちゃの煮物", cal:120 }, { cat:"野菜・副菜", name:"ほうれん草炒め", cal:80 },
+  { cat:"野菜・副菜", name:"味噌汁", cal:40 }, { cat:"野菜・副菜", name:"豚汁", cal:110 },
+  { cat:"野菜・副菜", name:"野菜スープ", cal:60 }, { cat:"野菜・副菜", name:"コーンスープ", cal:120 },
+  { cat:"野菜・副菜", name:"ミネストローネ", cal:100 }, { cat:"野菜・副菜", name:"クリームシチュー", cal:380 },
+  { cat:"野菜・副菜", name:"ビーフシチュー", cal:420 },
+  // 卵・豆腐
+  { cat:"卵・豆腐", name:"目玉焼き（1個）", cal:100 }, { cat:"卵・豆腐", name:"スクランブルエッグ", cal:150 },
+  { cat:"卵・豆腐", name:"オムレツ", cal:200 }, { cat:"卵・豆腐", name:"ゆで卵（1個）", cal:80 },
+  { cat:"卵・豆腐", name:"温泉卵（1個）", cal:80 }, { cat:"卵・豆腐", name:"卵かけご飯", cal:350 },
+  { cat:"卵・豆腐", name:"だし巻き卵", cal:150 }, { cat:"卵・豆腐", name:"茶碗蒸し", cal:80 },
+  { cat:"卵・豆腐", name:"冷奴（1丁）", cal:80 }, { cat:"卵・豆腐", name:"豆腐（1丁）", cal:168 },
+  { cat:"卵・豆腐", name:"揚げ出し豆腐", cal:180 }, { cat:"卵・豆腐", name:"麻婆豆腐", cal:250 },
+  { cat:"卵・豆腐", name:"納豆（1パック）", cal:100 }, { cat:"卵・豆腐", name:"納豆ご飯", cal:350 },
+  { cat:"卵・豆腐", name:"ヨーグルト（プレーン）", cal:100 }, { cat:"卵・豆腐", name:"牛乳（200ml）", cal:134 },
+  { cat:"卵・豆腐", name:"豆乳（200ml）", cal:90 }, { cat:"卵・豆腐", name:"プロテイン（1杯）", cal:120 },
+  // スイーツ
+  { cat:"スイーツ", name:"ショートケーキ", cal:320 }, { cat:"スイーツ", name:"チーズケーキ", cal:350 },
+  { cat:"スイーツ", name:"モンブラン", cal:380 }, { cat:"スイーツ", name:"チョコレートケーキ", cal:400 },
+  { cat:"スイーツ", name:"プリン", cal:130 }, { cat:"スイーツ", name:"クレームブリュレ", cal:250 },
+  { cat:"スイーツ", name:"ソフトクリーム", cal:250 }, { cat:"スイーツ", name:"アイスクリーム（1個）", cal:200 },
+  { cat:"スイーツ", name:"ガリガリ君", cal:69 }, { cat:"スイーツ", name:"ハーゲンダッツ（1個）", cal:280 },
+  { cat:"スイーツ", name:"ドーナツ", cal:250 }, { cat:"スイーツ", name:"たい焼き", cal:190 },
+  { cat:"スイーツ", name:"大福（1個）", cal:150 }, { cat:"スイーツ", name:"みたらし団子（1串）", cal:130 },
+  { cat:"スイーツ", name:"ようかん（1切）", cal:170 }, { cat:"スイーツ", name:"どら焼き", cal:230 },
+  { cat:"スイーツ", name:"チョコレート（板1枚）", cal:200 }, { cat:"スイーツ", name:"クッキー（3枚）", cal:150 },
+  { cat:"スイーツ", name:"シュークリーム", cal:180 }, { cat:"スイーツ", name:"パンケーキ（2枚）", cal:350 },
+  { cat:"スイーツ", name:"ティラミス", cal:280 }, { cat:"スイーツ", name:"マカロン（1個）", cal:90 },
+  // 軽食・パン
+  { cat:"軽食・パン", name:"食パン（1枚）", cal:158 }, { cat:"軽食・パン", name:"フランスパン（1切）", cal:185 },
+  { cat:"軽食・パン", name:"クロワッサン", cal:240 }, { cat:"軽食・パン", name:"ベーグル", cal:270 },
+  { cat:"軽食・パン", name:"メロンパン", cal:360 }, { cat:"軽食・パン", name:"あんパン", cal:280 },
+  { cat:"軽食・パン", name:"クリームパン", cal:300 }, { cat:"軽食・パン", name:"サンドイッチ（ハム）", cal:310 },
+  { cat:"軽食・パン", name:"サンドイッチ（たまご）", cal:340 }, { cat:"軽食・パン", name:"ホットサンド", cal:360 },
+  { cat:"軽食・パン", name:"バナナ（1本）", cal:86 }, { cat:"軽食・パン", name:"りんご（1個）", cal:138 },
+  { cat:"軽食・パン", name:"みかん（1個）", cal:40 }, { cat:"軽食・パン", name:"いちご（100g）", cal:34 },
+  { cat:"軽食・パン", name:"ポテトチップス（1袋）", cal:260 }, { cat:"軽食・パン", name:"おせんべい（5枚）", cal:100 },
+  { cat:"軽食・パン", name:"ポップコーン（1袋）", cal:180 }, { cat:"軽食・パン", name:"プロテインバー", cal:200 },
+  // ドリンク
+  { cat:"ドリンク", name:"水（0kcal）", cal:0 }, { cat:"ドリンク", name:"炭酸水（0kcal）", cal:0 },
+  { cat:"ドリンク", name:"緑茶（0kcal）", cal:0 }, { cat:"ドリンク", name:"麦茶（0kcal）", cal:0 },
+  { cat:"ドリンク", name:"コーヒー（無糖）", cal:5 }, { cat:"ドリンク", name:"コーヒー（砂糖あり）", cal:40 },
+  { cat:"ドリンク", name:"カフェラテ（Mサイズ）", cal:140 }, { cat:"ドリンク", name:"抹茶ラテ（Mサイズ）", cal:180 },
+  { cat:"ドリンク", name:"コーラ（350ml）", cal:140 }, { cat:"ドリンク", name:"コーラ（500ml）", cal:200 },
+  { cat:"ドリンク", name:"オレンジジュース（200ml）", cal:88 }, { cat:"ドリンク", name:"スポーツドリンク（500ml）", cal:120 },
+  { cat:"ドリンク", name:"エナジードリンク（250ml）", cal:115 }, { cat:"ドリンク", name:"甘酒（200ml）", cal:130 },
+  // お酒
+  { cat:"お酒", name:"ビール（350ml缶）", cal:140 }, { cat:"お酒", name:"ビール（500ml缶）", cal:200 },
+  { cat:"お酒", name:"発泡酒（350ml缶）", cal:120 }, { cat:"お酒", name:"第三のビール（350ml缶）", cal:115 },
+  { cat:"お酒", name:"ハイボール（350ml缶）", cal:140 }, { cat:"お酒", name:"ハイボール（500ml缶）", cal:195 },
+  { cat:"お酒", name:"レモンサワー（350ml缶）", cal:130 }, { cat:"お酒", name:"チューハイ（350ml缶）", cal:140 },
+  { cat:"お酒", name:"梅サワー（350ml缶）", cal:155 }, { cat:"お酒", name:"ゼロ系チューハイ", cal:45 },
+  { cat:"お酒", name:"日本酒（1合）", cal:185 }, { cat:"お酒", name:"日本酒（2合）", cal:370 },
+  { cat:"お酒", name:"焼酎（1杯/60ml）", cal:85 }, { cat:"お酒", name:"焼酎水割り（1杯）", cal:60 },
+  { cat:"お酒", name:"ワイン赤（1杯/120ml）", cal:88 }, { cat:"お酒", name:"ワイン白（1杯/120ml）", cal:82 },
+  { cat:"お酒", name:"スパークリングワイン（1杯）", cal:80 }, { cat:"お酒", name:"ウイスキー（1杯/30ml）", cal:70 },
+  { cat:"お酒", name:"梅酒（1杯/60ml）", cal:82 },
+  // 焼き鳥（1本）
+  { cat:"焼き鳥", name:"もも（1本）", cal:60 }, { cat:"焼き鳥", name:"ねぎま（1本）", cal:55 },
+  { cat:"焼き鳥", name:"皮（1本）", cal:90 }, { cat:"焼き鳥", name:"つくね（1本）", cal:70 },
+  { cat:"焼き鳥", name:"砂肝（1本）", cal:35 }, { cat:"焼き鳥", name:"ハツ（1本）", cal:45 },
+  { cat:"焼き鳥", name:"レバー（1本）", cal:40 }, { cat:"焼き鳥", name:"せせり（1本）", cal:65 },
+  { cat:"焼き鳥", name:"ぼんじり（1本）", cal:80 }, { cat:"焼き鳥", name:"手羽先（1本）", cal:100 },
+  { cat:"焼き鳥", name:"ぎんなん（1串）", cal:50 }, { cat:"焼き鳥", name:"アスパラ巻き（1本）", cal:55 },
+  { cat:"焼き鳥", name:"ベーコン巻き（1本）", cal:80 }, { cat:"焼き鳥", name:"豚バラ（1本）", cal:95 },
+  // コンビニ
+  { cat:"コンビニ", name:"セブン ツナマヨおにぎり", cal:210 }, { cat:"コンビニ", name:"セブン 親子丼", cal:630 },
+  { cat:"コンビニ", name:"ローソン Lチキ（1個）", cal:240 }, { cat:"コンビニ", name:"ローソン から揚げクン（5個）", cal:250 },
+  { cat:"コンビニ", name:"ファミマ 肉まん（1個）", cal:210 }, { cat:"コンビニ", name:"ファミマ チキン（1本）", cal:290 },
+  { cat:"コンビニ", name:"コンビニおにぎり（平均）", cal:180 }, { cat:"コンビニ", name:"コンビニサンドイッチ", cal:310 },
+  { cat:"コンビニ", name:"コンビニ弁当（幕の内）", cal:680 }, { cat:"コンビニ", name:"コンビニカップ麺", cal:380 },
+  { cat:"コンビニ", name:"コンビニ豚まん", cal:250 }, { cat:"コンビニ", name:"ビッグマック", cal:545 },
+  { cat:"コンビニ", name:"フライドポテト（M）", cal:420 }, { cat:"コンビニ", name:"KFCフライドチキン（1ピース）", cal:290 },
+  // 居酒屋
+  { cat:"居酒屋", name:"枝豆（1皿）", cal:130 }, { cat:"居酒屋", name:"冷奴（1丁）", cal:80 },
+  { cat:"居酒屋", name:"もつ煮込み", cal:180 }, { cat:"居酒屋", name:"ポテトフライ（1皿）", cal:300 },
+  { cat:"居酒屋", name:"たこわさ", cal:50 }, { cat:"居酒屋", name:"キムチ（1皿）", cal:45 },
+  { cat:"居酒屋", name:"塩辛（1皿）", cal:60 }, { cat:"居酒屋", name:"〆雑炊", cal:250 },
+  { cat:"居酒屋", name:"ピザ（1切）", cal:250 }, { cat:"居酒屋", name:"グラタン", cal:400 },
+  { cat:"居酒屋", name:"回鍋肉（ホイコーロー）", cal:300 }, { cat:"居酒屋", name:"エビチリ", cal:280 },
+  { cat:"居酒屋", name:"麻婆なす", cal:220 }, { cat:"居酒屋", name:"エビマヨ", cal:350 },
 ];
 
 const C = {
@@ -470,6 +543,7 @@ export default function App() {
   const [mealCalPer100g, setMealCalPer100g] = useState(null);
   const [gramSuggestions, setGramSuggestions] = useState([]);
   const [foodSearch, setFoodSearch] = useState("");
+  const [foodCategory, setFoodCategory] = useState("全て");
   const [stepsInput, setStepsInput] = useState("");
   const [exerciseMinutes, setExerciseMinutes] = useState("");
   const [selectedExercise, setSelectedExercise] = useState(EXERCISES[0]);
@@ -677,7 +751,10 @@ export default function App() {
   const bmiColor = !bmi ? C.sub : bmi < 18.5 ? C.blue : bmi < 25 ? C.green : bmi < 30 ? C.orange : C.red;
   const waterPct = Math.min((todayWater / 2000) * 100, 100);
 
-  const filteredFoods = FOOD_DB.filter(f => f.name.includes(foodSearch));
+  const filteredFoods = FOOD_DB.filter(f =>
+    (foodCategory === "全て" || f.cat === foodCategory) &&
+    (!foodSearch || f.name.includes(foodSearch))
+  );
 
   const ACHIEVEMENTS = [
     { icon: "🍽", label: "初記録", done: Object.values(days).some(d => d.meals?.length > 0) },
@@ -890,9 +967,20 @@ export default function App() {
           {/* 食品DB */}
           <div style={card}>
             <div style={sec}>🍱 FOOD DATABASE</div>
-            <input style={{ ...inp, marginBottom: 10 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => setFoodSearch(e.target.value)} />
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 180, overflowY: "auto" }}>
-              {filteredFoods.map((f, i) => (
+            {/* カテゴリタブ */}
+            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 8, WebkitOverflowScrolling: "touch" }}>
+              {FOOD_CATEGORIES.map(cat => (
+                <button key={cat} onClick={() => { setFoodCategory(cat); setFoodSearch(""); }}
+                  style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: `1px solid ${foodCategory === cat ? C.orange : C.border}`, background: foodCategory === cat ? `${C.orange}22` : C.card2, color: foodCategory === cat ? C.orange : C.sub, fontWeight: foodCategory === cat ? "800" : "400", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <input style={{ ...inp, marginBottom: 10 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => { setFoodSearch(e.target.value); setFoodCategory("全て"); }} />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 220, overflowY: "auto" }}>
+              {filteredFoods.length === 0
+                ? <div style={{ color: C.sub, fontSize: 13, padding: 10 }}>該当なし</div>
+                : filteredFoods.map((f, i) => (
                 <button key={i} onClick={() => addMeal(f.name, f.cal)}
                   style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 12, cursor: "pointer", textAlign: "left" }}>
                   <span style={{ fontWeight: "700" }}>{f.name}</span>
