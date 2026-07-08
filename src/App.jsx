@@ -443,7 +443,7 @@ function sportBtn(color, ex = {}) {
   return {
     background: `linear-gradient(135deg, ${color}, ${color}CC)`,
     color: "#fff", border: "none", borderRadius: 12,
-    padding: "16px 20px", fontWeight: "800", fontSize: 17, cursor: "pointer",
+    padding: "16px 20px", fontWeight: "800", fontSize: 19, cursor: "pointer",
     touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
     display: "block", width: "100%", letterSpacing: 0.5,
     boxShadow: `0 4px 20px ${color}44`, ...ex,
@@ -452,7 +452,7 @@ function sportBtn(color, ex = {}) {
 
 function WeightGraph({ entries }) {
   if (entries.length === 0)
-    return <div style={{ textAlign: "center", color: C.sub, padding: "40px 0", fontSize: 15 }}>データなし</div>;
+    return <div style={{ textAlign: "center", color: C.sub, padding: "40px 0", fontSize: 17 }}>データなし</div>;
   const vals = entries.map((e) => e.weight);
   const min = Math.floor(Math.min(...vals) - 1);
   const max = Math.ceil(Math.max(...vals) + 1);
@@ -475,10 +475,10 @@ function WeightGraph({ entries }) {
       <polyline points={points} fill="none" stroke={C.orange} strokeWidth="2.5" strokeLinejoin="round" />
       {entries.map((e, i) => <circle key={i} cx={x(i)} cy={y(e.weight)} r="5" fill={C.bg} stroke={C.orange} strokeWidth="2.5" />)}
       {entries.map((e, i) => i % Math.max(1, Math.floor(entries.length / 5)) === 0 && (
-        <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize="11" fill={C.sub}>{e.date.slice(5)}</text>
+        <text key={i} x={x(i)} y={H - 6} textAnchor="middle" fontSize="13" fill={C.sub}>{e.date.slice(5)}</text>
       ))}
-      <text x={pad - 4} y={pad + 4} textAnchor="end" fontSize="11" fill={C.sub}>{max}</text>
-      <text x={pad - 4} y={H - pad + 4} textAnchor="end" fontSize="11" fill={C.sub}>{min}</text>
+      <text x={pad - 4} y={pad + 4} textAnchor="end" fontSize="13" fill={C.sub}>{max}</text>
+      <text x={pad - 4} y={H - pad + 4} textAnchor="end" fontSize="13" fill={C.sub}>{min}</text>
     </svg>
   );
 }
@@ -502,11 +502,11 @@ function FastingRing({ elapsed, total, active }) {
         strokeDasharray={`${dash} ${circumference}`} strokeLinecap="round"
         transform={`rotate(-90 ${cx} ${cy})`}
         style={{ transition: "stroke-dasharray 0.5s", filter: active ? `drop-shadow(0 0 8px ${color})` : "none" }} />
-      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="24" fontWeight="bold" fill={C.text}>{fmt(elapsed)}</text>
-      <text x={cx} y={cy + 14} textAnchor="middle" fontSize="13" fill={color} fontWeight="bold">
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="26" fontWeight="bold" fill={C.text}>{fmt(elapsed)}</text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fontSize="15" fill={color} fontWeight="bold">
         {progress >= 1 ? "COMPLETE!" : active ? "FASTING" : "PAUSED"}
       </text>
-      <text x={cx} y={cy + 30} textAnchor="middle" fontSize="12" fill={C.sub}>GOAL {total / 3600}h</text>
+      <text x={cx} y={cy + 30} textAnchor="middle" fontSize="14" fill={C.sub}>GOAL {total / 3600}h</text>
     </svg>
   );
 }
@@ -571,14 +571,14 @@ function CalorieCamera({ onAdd, apiKey }) {
           </button>
         </div>
       )}
-      {error && <div style={{ color: C.red, fontSize: 15, padding: "8px 0" }}>{error}</div>}
+      {error && <div style={{ color: C.red, fontSize: 17, padding: "8px 0" }}>{error}</div>}
       {result && (
         <div style={{ background: C.card2, border: `1px solid ${C.green}44`, borderRadius: 12, padding: 16, marginTop: 8 }}>
-          <div style={{ fontSize: 13, color: C.green, marginBottom: 4, fontWeight: "bold", letterSpacing: 1 }}>AI ANALYSIS</div>
-          <div style={{ fontWeight: "bold", fontSize: 20, marginBottom: 4 }}>{result.name}</div>
-          <div style={{ fontSize: 15, color: C.sub, marginBottom: 12 }}>{result.description}</div>
-          <div style={{ fontSize: 42, fontWeight: "900", color: C.green, marginBottom: 12 }}>
-            {result.calories}<span style={{ fontSize: 16, fontWeight: "normal", color: C.sub }}> kcal</span>
+          <div style={{ fontSize: 15, color: C.green, marginBottom: 4, fontWeight: "bold", letterSpacing: 1 }}>AI ANALYSIS</div>
+          <div style={{ fontWeight: "bold", fontSize: 22, marginBottom: 4 }}>{result.name}</div>
+          <div style={{ fontSize: 17, color: C.sub, marginBottom: 12 }}>{result.description}</div>
+          <div style={{ fontSize: 44, fontWeight: "900", color: C.green, marginBottom: 12 }}>
+            {result.calories}<span style={{ fontSize: 18, fontWeight: "normal", color: C.sub }}> kcal</span>
           </div>
           <button onClick={() => { onAdd(result.name, result.calories); setImage(null); setResult(null); }} style={sportBtn(C.orange)}>✅ 追加する</button>
         </div>
@@ -847,13 +847,13 @@ export default function App() {
 
   const inp = {
     border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px",
-    fontSize: 18, width: "100%", boxSizing: "border-box", outline: "none",
+    fontSize: 20, width: "100%", boxSizing: "border-box", outline: "none",
     fontFamily: "inherit", backgroundColor: C.card2, color: C.text,
     WebkitAppearance: "none", appearance: "none", display: "block",
   };
   const card = { background: C.card, borderRadius: 16, padding: 20, margin: "12px 14px 0", border: `1px solid ${C.border}` };
-  const sec = { fontSize: 13, fontWeight: "900", color: C.sub, marginBottom: 14, letterSpacing: 2, textTransform: "uppercase" };
-  const badge = (c) => ({ background: `${c}22`, color: c, borderRadius: 8, padding: "4px 10px", fontSize: 14, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44` });
+  const sec = { fontSize: 15, fontWeight: "900", color: C.sub, marginBottom: 14, letterSpacing: 2, textTransform: "uppercase" };
+  const badge = (c) => ({ background: `${c}22`, color: c, borderRadius: 8, padding: "4px 10px", fontSize: 16, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44` });
   const statBox = (c) => ({ flex: 1, background: `${c}0D`, borderRadius: 12, padding: 12, textAlign: "center", border: `1px solid ${c}33` });
 
   const dateLabel = currentDate === TODAY ? "今日" : currentDate.slice(5).replace("-", "/");
@@ -865,19 +865,19 @@ export default function App() {
       <div style={{ background: "linear-gradient(135deg,#1A0A00,#0A0A0A)", borderBottom: `1px solid ${C.border}`, padding: "16px 20px 14px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div>
-            <div style={{ fontSize: 12, color: C.orange, fontWeight: "900", letterSpacing: 3, marginBottom: 2 }}>DIET TRACKER</div>
-            <div style={{ fontSize: 22, fontWeight: "900" }}>💪 MY FITNESS</div>
+            <div style={{ fontSize: 14, color: C.orange, fontWeight: "900", letterSpacing: 3, marginBottom: 2 }}>DIET TRACKER</div>
+            <div style={{ fontSize: 24, fontWeight: "900" }}>💪 MY FITNESS</div>
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 30, fontWeight: "900", color: calPct > 80 ? C.red : C.orange }}>{Math.round(calPct)}<span style={{ fontSize: 13, color: C.sub }}>%</span></div>
-            <div style={{ fontSize: 12, color: C.sub }}>{totalCal} / {goal.calLimit} kcal</div>
+            <div style={{ fontSize: 32, fontWeight: "900", color: calPct > 80 ? C.red : C.orange }}>{Math.round(calPct)}<span style={{ fontSize: 15, color: C.sub }}>%</span></div>
+            <div style={{ fontSize: 14, color: C.sub }}>{totalCal} / {goal.calLimit} kcal</div>
           </div>
         </div>
         {/* 日付ナビ */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 10 }}>
-          <button onClick={prevDate} style={{ background: "none", border: `1px solid ${C.border}`, color: C.sub, borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 18 }}>‹</button>
-          <div style={{ fontSize: 16, fontWeight: "800", color: isToday ? C.orange : C.text, minWidth: 80, textAlign: "center" }}>{dateLabel}</div>
-          <button onClick={nextDate} disabled={isToday} style={{ background: "none", border: `1px solid ${C.border}`, color: isToday ? C.sub2 : C.sub, borderRadius: 8, padding: "4px 12px", cursor: isToday ? "default" : "pointer", fontSize: 18 }}>›</button>
+          <button onClick={prevDate} style={{ background: "none", border: `1px solid ${C.border}`, color: C.sub, borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 20 }}>‹</button>
+          <div style={{ fontSize: 18, fontWeight: "800", color: isToday ? C.orange : C.text, minWidth: 80, textAlign: "center" }}>{dateLabel}</div>
+          <button onClick={nextDate} disabled={isToday} style={{ background: "none", border: `1px solid ${C.border}`, color: isToday ? C.sub2 : C.sub, borderRadius: 8, padding: "4px 12px", cursor: isToday ? "default" : "pointer", fontSize: 20 }}>›</button>
         </div>
         {/* カロリーバー */}
         <div style={{ background: C.border, borderRadius: 6, height: 5, overflow: "hidden" }}>
@@ -895,7 +895,7 @@ export default function App() {
               <FastingRing elapsed={fastElapsed} total={fastGoal * 3600} active={fastActive} />
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, color: C.sub, marginBottom: 6 }}>TARGET</div>
+                  <div style={{ fontSize: 14, color: C.sub, marginBottom: 6 }}>TARGET</div>
                   <select value={fastGoal} onChange={(e) => { setFastGoal(Number(e.target.value)); resetFastTimer(); }} style={inp}>
                     {[12, 14, 16, 18, 20, 24].map(h => <option key={h} value={h}>{h}h</option>)}
                   </select>
@@ -903,7 +903,7 @@ export default function App() {
                 <button onClick={handleTimerBtn} style={sportBtn(fastElapsed >= fastGoal * 3600 ? C.green : fastActive ? C.red : C.orange)}>
                   {fastElapsed >= fastGoal * 3600 ? "🏆 RESET" : fastActive ? "⏸ STOP" : "▶ START"}
                 </button>
-                <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 14, cursor: "pointer" }}>🔄 RESET</button>
+                <button onClick={resetFastTimer} style={{ marginTop: 8, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 16, cursor: "pointer" }}>🔄 RESET</button>
               </div>
             </div>
           </div>
@@ -912,21 +912,21 @@ export default function App() {
             <div style={sec}>🔥 CALORIE BALANCE</div>
             <div style={{ display: "flex", gap: 8 }}>
               <div style={statBox(C.red)}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>摂取</div>
-                <div style={{ fontSize: 28, fontWeight: "900", color: C.red }}>{totalCal}</div>
-                <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>摂取</div>
+                <div style={{ fontSize: 30, fontWeight: "900", color: C.red }}>{totalCal}</div>
+                <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 20 }}>−</div>
+              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 22 }}>−</div>
               <div style={statBox(C.green)}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>消費</div>
-                <div style={{ fontSize: 28, fontWeight: "900", color: C.green }}>{totalBurned}</div>
-                <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>消費</div>
+                <div style={{ fontSize: 30, fontWeight: "900", color: C.green }}>{totalBurned}</div>
+                <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 20 }}>=</div>
+              <div style={{ display: "flex", alignItems: "center", color: C.sub, fontSize: 22 }}>=</div>
               <div style={statBox(C.blue)}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>正味</div>
-                <div style={{ fontSize: 28, fontWeight: "900", color: C.blue }}>{netCal}</div>
-                <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>正味</div>
+                <div style={{ fontSize: 30, fontWeight: "900", color: C.blue }}>{netCal}</div>
+                <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
               </div>
             </div>
           </div>
@@ -936,8 +936,8 @@ export default function App() {
             <div style={sec}>💧 WATER INTAKE</div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div>
-                <span style={{ fontSize: 38, fontWeight: "900", color: C.blue }}>{todayWater}</span>
-                <span style={{ fontSize: 15, color: C.sub }}> ml</span>
+                <span style={{ fontSize: 40, fontWeight: "900", color: C.blue }}>{todayWater}</span>
+                <span style={{ fontSize: 17, color: C.sub }}> ml</span>
               </div>
               <div style={badge(waterPct >= 100 ? C.green : C.blue)}>{Math.round(waterPct)}% / 2000ml</div>
             </div>
@@ -946,9 +946,9 @@ export default function App() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {[100, 200, 500].map(ml => (
-                <button key={ml} onClick={() => addWater(ml)} style={sportBtn(C.blue, { flex: 1, padding: "12px 8px", fontSize: 15 })}>+{ml}ml</button>
+                <button key={ml} onClick={() => addWater(ml)} style={sportBtn(C.blue, { flex: 1, padding: "12px 8px", fontSize: 17 })}>+{ml}ml</button>
               ))}
-              <button onClick={resetWater} style={{ flex: 1, padding: "12px 8px", background: "none", border: `1px solid ${C.border}`, borderRadius: 12, color: C.sub, fontSize: 14, cursor: "pointer" }}>リセット</button>
+              <button onClick={resetWater} style={{ flex: 1, padding: "12px 8px", background: "none", border: `1px solid ${C.border}`, borderRadius: 12, color: C.sub, fontSize: 16, cursor: "pointer" }}>リセット</button>
             </div>
           </div>
 
@@ -958,8 +958,8 @@ export default function App() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {ACHIEVEMENTS.map((a, i) => (
                 <div key={i} style={{ background: a.done ? `${C.yellow}22` : C.card2, border: `1px solid ${a.done ? C.yellow : C.border}`, borderRadius: 12, padding: "10px 14px", textAlign: "center", minWidth: 80, flex: 1, opacity: a.done ? 1 : 0.4, filter: a.done ? `drop-shadow(0 0 6px ${C.yellow})` : "none" }}>
-                  <div style={{ fontSize: 24 }}>{a.icon}</div>
-                  <div style={{ fontSize: 12, color: a.done ? C.yellow : C.sub, fontWeight: "800", marginTop: 4 }}>{a.label}</div>
+                  <div style={{ fontSize: 26 }}>{a.icon}</div>
+                  <div style={{ fontSize: 14, color: a.done ? C.yellow : C.sub, fontWeight: "800", marginTop: 4 }}>{a.label}</div>
                 </div>
               ))}
             </div>
@@ -973,19 +973,19 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", paddingBottom: 8, marginBottom: 4, borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ flex: 1 }} />
                 {["朝", "昼", "夕"].map(t => (
-                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 14, fontWeight: "900", color: t === "朝" ? C.yellow : t === "昼" ? C.orange : C.blue }}>{t}</div>
+                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 16, fontWeight: "900", color: t === "朝" ? C.yellow : t === "昼" ? C.orange : C.blue }}>{t}</div>
                 ))}
                 <div style={{ width: 36 }} />
               </div>
             )}
             {medList.length === 0 ? (
-              <div style={{ color: C.sub, fontSize: 15, textAlign: "center", padding: "10px 0 14px" }}>薬・サプリを追加してください</div>
+              <div style={{ color: C.sub, fontSize: 17, textAlign: "center", padding: "10px 0 14px" }}>薬・サプリを追加してください</div>
             ) : (
               medList.map(med => {
                 const takenArr = dayData.takenMeds ?? [];
                 return (
                   <div key={med.id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-                    <span style={{ flex: 1, fontSize: 16, color: C.text }}>{med.name}</span>
+                    <span style={{ flex: 1, fontSize: 18, color: C.text }}>{med.name}</span>
                     {["朝", "昼", "夕"].map(timing => {
                       const key = `${med.id}_${timing}`;
                       const checked = takenArr.includes(key);
@@ -993,14 +993,14 @@ export default function App() {
                       return (
                         <button key={timing} onClick={() => toggleMed(med.id, timing)}
                           style={{ width: 52, display: "flex", justifyContent: "center", background: "none", border: "none", cursor: "pointer", touchAction: "manipulation" }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: checked ? color : "none", border: `2px solid ${checked ? color : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#fff", fontWeight: "900" }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: checked ? color : "none", border: `2px solid ${checked ? color : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#fff", fontWeight: "900" }}>
                             {checked ? "✓" : ""}
                           </div>
                         </button>
                       );
                     })}
                     <button onClick={() => removeMed(med.id)}
-                      style={{ width: 36, background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 22, touchAction: "manipulation" }}>×</button>
+                      style={{ width: 36, background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 24, touchAction: "manipulation" }}>×</button>
                   </div>
                 );
               })
@@ -1030,7 +1030,7 @@ export default function App() {
                 <div style={{ display: "flex", gap: 8 }}>
                   {MEAL_TYPES.map(t => (
                     <button key={t.key} onClick={() => setMealType(t.key)}
-                      style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: `2px solid ${mealType === t.key ? t.color : C.border}`, background: mealType === t.key ? `${t.color}22` : C.card2, color: mealType === t.key ? t.color : C.sub, fontWeight: "800", fontSize: 13, cursor: "pointer", lineHeight: 1.4 }}>
+                      style={{ flex: 1, padding: "10px 4px", borderRadius: 10, border: `2px solid ${mealType === t.key ? t.color : C.border}`, background: mealType === t.key ? `${t.color}22` : C.card2, color: mealType === t.key ? t.color : C.sub, fontWeight: "800", fontSize: 15, cursor: "pointer", lineHeight: 1.4 }}>
                       {t.label}
                     </button>
                   ))}
@@ -1051,20 +1051,20 @@ export default function App() {
             <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 8, WebkitOverflowScrolling: "touch" }}>
               {FOOD_CATEGORIES.map(cat => (
                 <button key={cat} onClick={() => { setFoodCategory(cat); setFoodSearch(""); }}
-                  style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: `1px solid ${foodCategory === cat ? C.orange : C.border}`, background: foodCategory === cat ? `${C.orange}22` : C.card2, color: foodCategory === cat ? C.orange : C.sub, fontWeight: foodCategory === cat ? "800" : "400", fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: `1px solid ${foodCategory === cat ? C.orange : C.border}`, background: foodCategory === cat ? `${C.orange}22` : C.card2, color: foodCategory === cat ? C.orange : C.sub, fontWeight: foodCategory === cat ? "800" : "400", fontSize: 16, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {cat}
                 </button>
               ))}
             </div>
-            <input style={{ ...inp, marginBottom: 10 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => { setFoodSearch(e.target.value); setFoodCategory("全て"); }} />
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 220, overflowY: "auto" }}>
+            <input style={{ ...inp, marginBottom: 10, fontSize: 18 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => { setFoodSearch(e.target.value); setFoodCategory("全て"); }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 320, overflowY: "auto" }}>
               {filteredFoods.length === 0
-                ? <div style={{ color: C.sub, fontSize: 15, padding: 10 }}>該当なし</div>
+                ? <div style={{ color: C.sub, fontSize: 17, padding: 10 }}>該当なし</div>
                 : filteredFoods.map((f, i) => (
                 <button key={i} onClick={() => addMeal(f.name, f.cal)}
-                  style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
-                  <span style={{ fontWeight: "700" }}>{f.name}</span>
-                  <span style={{ color: C.orange, fontSize: 13, marginLeft: 6 }}>{f.cal}kcal</span>
+                  style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", color: C.text, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: "700", fontSize: 17 }}>{f.name}</span>
+                  <span style={{ color: C.orange, fontSize: 16, fontWeight: "800", marginLeft: 8, flexShrink: 0 }}>{f.cal} kcal</span>
                 </button>
               ))}
             </div>
@@ -1091,8 +1091,8 @@ export default function App() {
                     {gramSuggestions.map((f, i) => (
                       <div key={i} onClick={() => { setMealName(f.name); setMealCalPer100g(f.cal); setGramSuggestions([]); setMealCal(""); }}
                         style={{ padding: "10px 14px", cursor: "pointer", display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${C.border}` }}>
-                        <span style={{ color: C.text, fontSize: 15 }}>{f.name}</span>
-                        <span style={{ color: C.sub, fontSize: 14 }}>{f.cal}kcal/100g</span>
+                        <span style={{ color: C.text, fontSize: 17 }}>{f.name}</span>
+                        <span style={{ color: C.sub, fontSize: 16 }}>{f.cal}kcal/100g</span>
                       </div>
                     ))}
                   </div>
@@ -1102,9 +1102,9 @@ export default function App() {
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <input style={{ ...inp, flex: 1 }} type="tel" placeholder="グラム数" value={mealGrams}
                     onChange={e => { const g = e.target.value.replace(/[^0-9.]/g, ""); setMealGrams(g); if (g) setMealCal(String(Math.round(mealCalPer100g * parseFloat(g) / 100))); else setMealCal(""); }} />
-                  <span style={{ color: C.sub, fontSize: 14, whiteSpace: "nowrap" }}>g</span>
-                  {mealCal ? <span style={{ color: C.orange, fontWeight: "700", fontSize: 18, whiteSpace: "nowrap" }}>{mealCal} kcal</span>
-                    : <span style={{ color: C.sub, fontSize: 14, whiteSpace: "nowrap" }}>{mealCalPer100g}kcal/100g</span>}
+                  <span style={{ color: C.sub, fontSize: 16, whiteSpace: "nowrap" }}>g</span>
+                  {mealCal ? <span style={{ color: C.orange, fontWeight: "700", fontSize: 20, whiteSpace: "nowrap" }}>{mealCal} kcal</span>
+                    : <span style={{ color: C.sub, fontSize: 16, whiteSpace: "nowrap" }}>{mealCalPer100g}kcal/100g</span>}
                 </div>
               )}
               <input style={inp} type="tel" placeholder={mealCalPer100g ? "カロリー（自動計算 or 手動修正）" : "カロリー（kcal）"}
@@ -1124,7 +1124,7 @@ export default function App() {
                 { key: "間食", icon: "🍩", color: C.purple },
               ];
               const allMeals = dayData.meals;
-              if (allMeals.length === 0) return <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 15 }}>記録なし</div>;
+              if (allMeals.length === 0) return <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 17 }}>記録なし</div>;
               return (
                 <>
                   {MEAL_TYPES.map(t => {
@@ -1134,19 +1134,19 @@ export default function App() {
                     return (
                       <div key={t.key} style={{ marginBottom: 12 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0 4px", borderBottom: `2px solid ${t.color}44` }}>
-                          <span style={{ fontSize: 15, fontWeight: "900", color: t.color }}>{t.icon} {t.key}</span>
-                          <span style={{ fontSize: 14, color: t.color, fontWeight: "700" }}>{subTotal} kcal</span>
+                          <span style={{ fontSize: 17, fontWeight: "900", color: t.color }}>{t.icon} {t.key}</span>
+                          <span style={{ fontSize: 16, color: t.color, fontWeight: "700" }}>{subTotal} kcal</span>
                         </div>
                         {meals.map(m => (
                           <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0 10px 8px", borderBottom: `1px solid ${C.border}` }}>
                             <div>
-                              <div style={{ fontWeight: "700", fontSize: 16 }}>{m.name}</div>
-                              <div style={{ fontSize: 13, color: C.sub }}>{m.time}</div>
+                              <div style={{ fontWeight: "700", fontSize: 18 }}>{m.name}</div>
+                              <div style={{ fontSize: 15, color: C.sub }}>{m.time}</div>
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span style={badge(t.color)}>{m.cal} kcal</span>
                               <button onClick={() => updateDay(day => ({ ...day, meals: day.meals.filter(x => x.id !== m.id) }))}
-                                style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 22, padding: "8px", touchAction: "manipulation" }}>×</button>
+                                style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 24, padding: "8px", touchAction: "manipulation" }}>×</button>
                             </div>
                           </div>
                         ))}
@@ -1179,24 +1179,24 @@ export default function App() {
 
                 {/* ① カロリー全体 */}
                 <div style={{ background: C.card2, borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, color: C.sub, fontWeight: "700", marginBottom: 10, letterSpacing: 1 }}>CALORIE BALANCE</div>
+                  <div style={{ fontSize: 15, color: C.sub, fontWeight: "700", marginBottom: 10, letterSpacing: 1 }}>CALORIE BALANCE</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 13, color: C.sub, marginBottom: 2 }}>摂取</div>
-                      <div style={{ fontSize: 24, fontWeight: "900", color: C.orange }}>{totalCal}</div>
-                      <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                      <div style={{ fontSize: 15, color: C.sub, marginBottom: 2 }}>摂取</div>
+                      <div style={{ fontSize: 26, fontWeight: "900", color: C.orange }}>{totalCal}</div>
+                      <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
                     </div>
-                    <div style={{ fontSize: 22, color: C.sub2 }}>−</div>
+                    <div style={{ fontSize: 24, color: C.sub2 }}>−</div>
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 13, color: C.sub, marginBottom: 2 }}>消費</div>
-                      <div style={{ fontSize: 24, fontWeight: "900", color: C.green }}>{totalBurned}</div>
-                      <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                      <div style={{ fontSize: 15, color: C.sub, marginBottom: 2 }}>消費</div>
+                      <div style={{ fontSize: 26, fontWeight: "900", color: C.green }}>{totalBurned}</div>
+                      <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
                     </div>
-                    <div style={{ fontSize: 22, color: C.sub2 }}>=</div>
+                    <div style={{ fontSize: 24, color: C.sub2 }}>=</div>
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 13, color: C.sub, marginBottom: 2 }}>収支</div>
-                      <div style={{ fontSize: 24, fontWeight: "900", color: netColor }}>{netCal2 > 0 ? "+" : ""}{netCal2}</div>
-                      <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                      <div style={{ fontSize: 15, color: C.sub, marginBottom: 2 }}>収支</div>
+                      <div style={{ fontSize: 26, fontWeight: "900", color: netColor }}>{netCal2 > 0 ? "+" : ""}{netCal2}</div>
+                      <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
                     </div>
                   </div>
                 </div>
@@ -1204,19 +1204,19 @@ export default function App() {
                 {/* ② 食事内訳 */}
                 {dayData.meals.length > 0 && (
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 14, color: C.orange, fontWeight: "900", marginBottom: 8 }}>🍽 食事内訳</div>
+                    <div style={{ fontSize: 16, color: C.orange, fontWeight: "900", marginBottom: 8 }}>🍽 食事内訳</div>
                     {MEAL_TYPES_SUM.map(t => {
                       const meals = dayData.meals.filter(m => (m.type ?? "朝食") === t.key);
                       if (meals.length === 0) return null;
                       const sub = meals.reduce((s, m) => s + m.cal, 0);
                       return (
                         <div key={t.key} style={{ marginBottom: 8 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 3 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 16, marginBottom: 3 }}>
                             <span style={{ color: t.color, fontWeight: "700" }}>{t.icon} {t.key}</span>
                             <span style={{ color: t.color, fontWeight: "700" }}>{sub} kcal</span>
                           </div>
                           {meals.map(m => (
-                            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "2px 8px", color: C.sub }}>
+                            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 16, padding: "2px 8px", color: C.sub }}>
                               <span>{m.time} {m.name}</span>
                               <span>{m.cal} kcal</span>
                             </div>
@@ -1230,14 +1230,14 @@ export default function App() {
                 {/* ③ 運動記録 */}
                 {dayData.exercises.length > 0 && (
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 14, color: C.green, fontWeight: "900", marginBottom: 6 }}>🏃 運動記録</div>
+                    <div style={{ fontSize: 16, color: C.green, fontWeight: "900", marginBottom: 6 }}>🏃 運動記録</div>
                     {dayData.exercises.map(e => (
-                      <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "3px 0", color: C.sub }}>
+                      <div key={e.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 16, padding: "3px 0", color: C.sub }}>
                         <span>{e.time} {e.name}</span>
                         <span style={{ color: C.green }}>−{e.burned} kcal</span>
                       </div>
                     ))}
-                    <div style={{ fontSize: 14, color: C.sub, textAlign: "right", marginTop: 4, borderTop: `1px solid ${C.border}`, paddingTop: 4 }}>
+                    <div style={{ fontSize: 16, color: C.sub, textAlign: "right", marginTop: 4, borderTop: `1px solid ${C.border}`, paddingTop: 4 }}>
                       消費合計 <span style={{ color: C.green, fontWeight: "700" }}>−{totalBurned} kcal</span>
                     </div>
                   </div>
@@ -1245,7 +1245,7 @@ export default function App() {
 
                 {/* ④ 水分 */}
                 {todayWater > 0 && (
-                  <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", fontSize: 15 }}>
+                  <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", fontSize: 17 }}>
                     <span style={{ color: C.sub }}>💧 水分摂取</span>
                     <span style={{ color: C.blue, fontWeight: "700" }}>{todayWater} ml</span>
                   </div>
@@ -1253,11 +1253,11 @@ export default function App() {
 
                 {/* ⑤ 今日の評価 */}
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 14, color: C.sub, fontWeight: "700", marginBottom: 8 }}>⭐ 今日の評価</div>
+                  <div style={{ fontSize: 16, color: C.sub, fontWeight: "700", marginBottom: 8 }}>⭐ 今日の評価</div>
                   <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
                     {RATINGS.map((emoji, i) => (
                       <button key={i} onClick={() => updateDay(day => ({ ...day, rating: i }))}
-                        style={{ fontSize: 30, background: "none", border: `2px solid ${(dayData.rating ?? -1) === i ? C.orange : C.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", opacity: (dayData.rating ?? -1) === i ? 1 : 0.45 }}>
+                        style={{ fontSize: 32, background: "none", border: `2px solid ${(dayData.rating ?? -1) === i ? C.orange : C.border}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer", opacity: (dayData.rating ?? -1) === i ? 1 : 0.45 }}>
                         {emoji}
                       </button>
                     ))}
@@ -1266,9 +1266,9 @@ export default function App() {
 
                 {/* ⑥ メモ・感想 */}
                 <div>
-                  <div style={{ fontSize: 14, color: C.sub, fontWeight: "700", marginBottom: 6 }}>📝 メモ・感想</div>
+                  <div style={{ fontSize: 16, color: C.sub, fontWeight: "700", marginBottom: 6 }}>📝 メモ・感想</div>
                   <textarea
-                    style={{ ...inp, height: 100, resize: "none", lineHeight: 1.7, fontSize: 16 }}
+                    style={{ ...inp, height: 100, resize: "none", lineHeight: 1.7, fontSize: 18 }}
                     placeholder={"体調・食べた感想・気づき・明日の目標など…"}
                     value={dayData.note ?? ""}
                     onChange={e => updateDay(day => ({ ...day, note: e.target.value }))}
@@ -1286,9 +1286,9 @@ export default function App() {
             <div style={sec}>🚶 STEPS</div>
             {dayData.steps > 0 && (
               <div style={{ textAlign: "center", marginBottom: 14 }}>
-                <span style={{ fontSize: 42, fontWeight: "900", color: C.blue }}>{dayData.steps.toLocaleString()}</span>
-                <span style={{ fontSize: 16, color: C.sub }}> 歩</span>
-                <div style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>参考: 約{Math.round(calcStepCalories(dayData.steps, weights.length > 0 ? weights[weights.length-1].weight : 60))} kcal相当</div>
+                <span style={{ fontSize: 44, fontWeight: "900", color: C.blue }}>{dayData.steps.toLocaleString()}</span>
+                <span style={{ fontSize: 18, color: C.sub }}> 歩</span>
+                <div style={{ fontSize: 15, color: C.sub, marginTop: 4 }}>参考: 約{Math.round(calcStepCalories(dayData.steps, weights.length > 0 ? weights[weights.length-1].weight : 60))} kcal相当</div>
               </div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
@@ -1296,7 +1296,7 @@ export default function App() {
               <button onClick={addSteps} style={sportBtn(C.blue, { flex: "none", padding: "14px 20px", width: "auto" })}>➕</button>
             </div>
             {dayData.steps > 0 && (
-              <button onClick={() => updateDay(day => ({ ...day, steps: 0 }))} style={{ marginTop: 10, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 14, cursor: "pointer" }}>🔄 リセット</button>
+              <button onClick={() => updateDay(day => ({ ...day, steps: 0 }))} style={{ marginTop: 10, width: "100%", padding: "8px", borderRadius: 8, border: `1px solid ${C.border}`, background: "none", color: C.sub, fontSize: 16, cursor: "pointer" }}>🔄 リセット</button>
             )}
           </div>
 
@@ -1310,33 +1310,33 @@ export default function App() {
               <input style={inp} type="tel" placeholder="時間（分）" value={exerciseMinutes} onChange={e => setExerciseMinutes(e.target.value.replace(/[^0-9]/g, ""))} />
               {exerciseMinutes ? (
                 <div style={{ background: `${C.green}11`, border: `1px solid ${C.green}44`, borderRadius: 10, padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 15, color: C.sub }}>{selectedExercise.icon} {selectedExercise.name} {exerciseMinutes}分</span>
-                  <span style={{ fontSize: 22, fontWeight: "900", color: C.green }}>
+                  <span style={{ fontSize: 17, color: C.sub }}>{selectedExercise.icon} {selectedExercise.name} {exerciseMinutes}分</span>
+                  <span style={{ fontSize: 24, fontWeight: "900", color: C.green }}>
                     −{Math.round(selectedExercise.met * (weights.length > 0 ? weights[weights.length-1].weight : 60) * Number(exerciseMinutes) / 60)} kcal
                   </span>
                 </div>
               ) : (
-                <div style={{ fontSize: 14, color: C.sub, textAlign: "center" }}>時間を入れるとカロリーが表示されます</div>
+                <div style={{ fontSize: 16, color: C.sub, textAlign: "center" }}>時間を入れるとカロリーが表示されます</div>
               )}
               <button onClick={addExercise} style={sportBtn(C.green)}>🔥 ADD WORKOUT</button>
             </div>
           </div>
           <div style={card}>
             <div style={sec}>📋 TODAY'S TRAINING</div>
-{dayData.exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 15 }}>記録なし</div>}
+{dayData.exercises.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 17 }}>記録なし</div>}
             {dayData.exercises.map(e => (
               <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 4, height: 36, borderRadius: 2, background: C.green }} />
                   <div>
-                    <div style={{ fontWeight: "700", fontSize: 16 }}>{e.name}</div>
-                    <div style={{ fontSize: 13, color: C.sub }}>{e.time}</div>
+                    <div style={{ fontWeight: "700", fontSize: 18 }}>{e.name}</div>
+                    <div style={{ fontSize: 15, color: C.sub }}>{e.time}</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={badge(C.green)}>{e.burned} kcal</span>
                   <button onClick={() => updateDay(day => ({ ...day, exercises: day.exercises.filter(x => x.id !== e.id) }))}
-                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 22, padding: "8px" }}>×</button>
+                    style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 24, padding: "8px" }}>×</button>
                 </div>
               </div>
             ))}
@@ -1355,20 +1355,20 @@ export default function App() {
             <div style={sec}>📊 BMI</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
               <div style={{ flex: 1, background: `${bmiColor}11`, border: `1px solid ${bmiColor}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>BMI</div>
-                <div style={{ fontSize: 38, fontWeight: "900", color: bmiColor }}>{bmi ?? "−"}</div>
-                <div style={{ fontSize: 14, color: bmiColor, fontWeight: "800" }}>{bmiLabel}</div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>BMI</div>
+                <div style={{ fontSize: 40, fontWeight: "900", color: bmiColor }}>{bmi ?? "−"}</div>
+                <div style={{ fontSize: 16, color: bmiColor, fontWeight: "800" }}>{bmiLabel}</div>
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                 {[["< 18.5", "低体重", C.blue], ["18.5-25", "普通", C.green], ["25-30", "肥満①", C.orange], ["> 30", "肥満②", C.red]].map(([range, label, color]) => (
                   <div key={label} style={{ background: C.card2, borderRadius: 8, padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 13, color: C.sub }}>{range}</span>
-                    <span style={{ fontSize: 13, color, fontWeight: "800" }}>{label}</span>
+                    <span style={{ fontSize: 15, color: C.sub }}>{range}</span>
+                    <span style={{ fontSize: 15, color, fontWeight: "800" }}>{label}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{ fontSize: 13, color: C.sub, textAlign: "center" }}>身長: {goal.height}cm（GOALタブで変更可）</div>
+            <div style={{ fontSize: 15, color: C.sub, textAlign: "center" }}>身長: {goal.height}cm（GOALタブで変更可）</div>
           </div>
           <div style={card}>
             <div style={sec}>📈 WEIGHT GRAPH</div>
@@ -1381,11 +1381,11 @@ export default function App() {
           </div>
           <div style={card}>
             <div style={sec}>📅 HISTORY</div>
-            {weights.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 15 }}>記録なし</div>}
+            {weights.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 17 }}>記録なし</div>}
             {[...weights].reverse().slice(0, 10).map((w, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-                <span style={{ color: C.sub, fontSize: 15 }}>{w.date}</span>
-                <span style={{ fontWeight: "900" }}>{w.weight} <span style={{ fontSize: 13, color: C.sub }}>kg</span></span>
+                <span style={{ color: C.sub, fontSize: 17 }}>{w.date}</span>
+                <span style={{ fontWeight: "900" }}>{w.weight} <span style={{ fontSize: 15, color: C.sub }}>kg</span></span>
               </div>
             ))}
           </div>
@@ -1400,14 +1400,14 @@ export default function App() {
           </div>
           <div style={card}>
             <div style={sec}>📋 MEMO LIST</div>
-            {memos.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 15 }}>メモなし</div>}
+            {memos.length === 0 && <div style={{ color: C.sub, textAlign: "center", padding: 20, fontSize: 17 }}>メモなし</div>}
             {[...memos].reverse().map(m => (
               <div key={m.id} style={{ padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: C.purple, fontWeight: "bold" }}>{m.date}</span>
-                  <button onClick={() => setMemos(memos.filter(x => x.id !== m.id))} style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 22, padding: "4px 8px" }}>×</button>
+                  <span style={{ fontSize: 15, color: C.purple, fontWeight: "bold" }}>{m.date}</span>
+                  <button onClick={() => setMemos(memos.filter(x => x.id !== m.id))} style={{ background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 24, padding: "4px 8px" }}>×</button>
                 </div>
-                <div style={{ fontSize: 16, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
+                <div style={{ fontSize: 18, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{m.text}</div>
               </div>
             ))}
           </div>
@@ -1419,17 +1419,17 @@ export default function App() {
             <div style={sec}>🎯 CURRENT GOALS</div>
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
               <div style={{ flex: 1, background: `${C.purple}11`, border: `1px solid ${C.purple}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>TARGET</div>
-                <div style={{ fontSize: 32, fontWeight: "900", color: C.purple }}>{goal.target}<span style={{ fontSize: 14, color: C.sub }}> kg</span></div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>TARGET</div>
+                <div style={{ fontSize: 34, fontWeight: "900", color: C.purple }}>{goal.target}<span style={{ fontSize: 16, color: C.sub }}> kg</span></div>
               </div>
               <div style={{ flex: 1, background: `${C.orange}11`, border: `1px solid ${C.orange}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-                <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>CAL LIMIT</div>
-                <div style={{ fontSize: 26, fontWeight: "900", color: C.orange }}>{goal.calLimit}<span style={{ fontSize: 12, color: C.sub }}> kcal</span></div>
+                <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>CAL LIMIT</div>
+                <div style={{ fontSize: 28, fontWeight: "900", color: C.orange }}>{goal.calLimit}<span style={{ fontSize: 14, color: C.sub }}> kcal</span></div>
               </div>
             </div>
             <div style={{ background: `${Number(weightLeft) <= 0 ? C.green : C.orange}0D`, border: `1px solid ${Number(weightLeft) <= 0 ? C.green : C.orange}33`, borderRadius: 14, padding: 16, textAlign: "center" }}>
-              <div style={{ fontSize: 13, color: C.sub, marginBottom: 4 }}>REMAINING</div>
-              <div style={{ fontSize: 32, fontWeight: "900", color: Number(weightLeft) <= 0 ? C.green : C.orange }}>
+              <div style={{ fontSize: 15, color: C.sub, marginBottom: 4 }}>REMAINING</div>
+              <div style={{ fontSize: 34, fontWeight: "900", color: Number(weightLeft) <= 0 ? C.green : C.orange }}>
                 {Number(weightLeft) <= 0 ? "🎉 目標達成！" : `あと ${weightLeft} kg！`}
               </div>
             </div>
@@ -1461,7 +1461,7 @@ export default function App() {
                   <div style={{ display: "flex", gap: 8 }}>
                     {[["female","女性"],["male","男性"]].map(([v,label]) => (
                       <button key={v} onClick={() => setTdeeSex(v)}
-                        style={{ flex: 1, padding: "12px", borderRadius: 10, border: `2px solid ${tdeeSex === v ? C.blue : C.border}`, background: tdeeSex === v ? `${C.blue}22` : C.card2, color: tdeeSex === v ? C.blue : C.sub, fontWeight: "800", fontSize: 16, cursor: "pointer" }}>
+                        style={{ flex: 1, padding: "12px", borderRadius: 10, border: `2px solid ${tdeeSex === v ? C.blue : C.border}`, background: tdeeSex === v ? `${C.blue}22` : C.card2, color: tdeeSex === v ? C.blue : C.sub, fontWeight: "800", fontSize: 18, cursor: "pointer" }}>
                         {label}
                       </button>
                     ))}
@@ -1478,33 +1478,33 @@ export default function App() {
                     <div style={{ background: C.card2, borderRadius: 12, padding: 16, marginTop: 4 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                         <div style={{ textAlign: "center", flex: 1 }}>
-                          <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>基礎代謝 BMR</div>
-                          <div style={{ fontSize: 26, fontWeight: "900", color: C.blue }}>{bmr.toLocaleString()}</div>
-                          <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                          <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>基礎代謝 BMR</div>
+                          <div style={{ fontSize: 28, fontWeight: "900", color: C.blue }}>{bmr.toLocaleString()}</div>
+                          <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", color: C.sub }}>→</div>
                         <div style={{ textAlign: "center", flex: 1 }}>
-                          <div style={{ fontSize: 12, color: C.sub, marginBottom: 4 }}>1日の総消費 TDEE</div>
-                          <div style={{ fontSize: 30, fontWeight: "900", color: C.orange }}>{tdee.toLocaleString()}</div>
-                          <div style={{ fontSize: 12, color: C.sub }}>kcal</div>
+                          <div style={{ fontSize: 14, color: C.sub, marginBottom: 4 }}>1日の総消費 TDEE</div>
+                          <div style={{ fontSize: 32, fontWeight: "900", color: C.orange }}>{tdee.toLocaleString()}</div>
+                          <div style={{ fontSize: 14, color: C.sub }}>kcal</div>
                         </div>
                       </div>
-                      <div style={{ fontSize: 13, color: C.sub, textAlign: "center", marginBottom: 10 }}>
+                      <div style={{ fontSize: 15, color: C.sub, textAlign: "center", marginBottom: 10 }}>
                         ダイエット目標なら <span style={{ color: C.green, fontWeight: "700" }}>{(tdee - 500).toLocaleString()}</span> kcal（−500kcal）が目安
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => setGoal(g => ({ ...g, calLimit: tdee }))}
-                          style={{ ...sportBtn(C.orange), flex: 1, padding: "10px", fontSize: 14 }}>
+                          style={{ ...sportBtn(C.orange), flex: 1, padding: "10px", fontSize: 16 }}>
                           TDEEをカロリー上限に設定
                         </button>
                         <button onClick={() => setGoal(g => ({ ...g, calLimit: tdee - 500 }))}
-                          style={{ ...sportBtn(C.green), flex: 1, padding: "10px", fontSize: 14 }}>
+                          style={{ ...sportBtn(C.green), flex: 1, padding: "10px", fontSize: 16 }}>
                           −500kcalで設定
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ fontSize: 14, color: C.sub, textAlign: "center", padding: "8px 0" }}>
+                    <div style={{ fontSize: 16, color: C.sub, textAlign: "center", padding: "8px 0" }}>
                       年齢を入力するとTDEEを計算します（体重・身長はGOAL設定から参照）
                     </div>
                   )}
@@ -1531,18 +1531,18 @@ export default function App() {
             </button>
             {aiAdvice.length > 0 && aiAdvice.map((a, i) => (
               <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < aiAdvice.length - 1 ? `1px solid ${C.border}` : "none", alignItems: "flex-start" }}>
-                <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
-                <span style={{ fontSize: 16, lineHeight: 1.6, color: C.sub }}>{a}</span>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>💡</span>
+                <span style={{ fontSize: 18, lineHeight: 1.6, color: C.sub }}>{a}</span>
               </div>
             ))}
-            {aiAdvice.length === 0 && <div style={{ color: C.sub, fontSize: 15, textAlign: "center", padding: "8px 0" }}>ボタンを押してAIアドバイスを取得</div>}
+            {aiAdvice.length === 0 && <div style={{ color: C.sub, fontSize: 17, textAlign: "center", padding: "8px 0" }}>ボタンを押してAIアドバイスを取得</div>}
           </div>
 
           {/* CSVエクスポート */}
           <div style={card}>
             <div style={sec}>📤 EXPORT DATA</div>
             <button onClick={exportCSV} style={sportBtn(C.blue)}>📊 CSVでダウンロード</button>
-            <div style={{ fontSize: 13, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分の全データをエクスポート</div>
+            <div style={{ fontSize: 15, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分の全データをエクスポート</div>
           </div>
 
         </>}
@@ -1552,8 +1552,8 @@ export default function App() {
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: C.card, display: "flex", borderTop: `1px solid ${C.border}`, zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
-            style={{ flex: 1, padding: "10px 2px 8px", border: "none", background: "none", fontSize: 11, fontWeight: i === tab ? "900" : "normal", color: i === tab ? C.orange : C.sub2, cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", letterSpacing: 0.5 }}>
-            <div style={{ fontSize: 22, marginBottom: 2, filter: i === tab ? `drop-shadow(0 0 6px ${C.orange})` : "none" }}>{icon}</div>
+            style={{ flex: 1, padding: "10px 2px 8px", border: "none", background: "none", fontSize: 13, fontWeight: i === tab ? "900" : "normal", color: i === tab ? C.orange : C.sub2, cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 24, marginBottom: 2, filter: i === tab ? `drop-shadow(0 0 6px ${C.orange})` : "none" }}>{icon}</div>
             <div>{TAB_LABELS[i]}</div>
           </button>
         ))}
