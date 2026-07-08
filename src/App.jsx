@@ -1048,23 +1048,23 @@ export default function App() {
           <div style={card}>
             <div style={sec}>🍱 FOOD DATABASE</div>
             {/* カテゴリタブ */}
-            <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8, marginBottom: 8, WebkitOverflowScrolling: "touch" }}>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 10, marginBottom: 10, WebkitOverflowScrolling: "touch" }}>
               {FOOD_CATEGORIES.map(cat => (
                 <button key={cat} onClick={() => { setFoodCategory(cat); setFoodSearch(""); }}
-                  style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: `1px solid ${foodCategory === cat ? C.orange : C.border}`, background: foodCategory === cat ? `${C.orange}22` : C.card2, color: foodCategory === cat ? C.orange : C.sub, fontWeight: foodCategory === cat ? "800" : "400", fontSize: 16, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  style={{ flexShrink: 0, padding: "10px 18px", borderRadius: 24, border: `2px solid ${foodCategory === cat ? C.orange : C.border}`, background: foodCategory === cat ? `${C.orange}22` : C.card2, color: foodCategory === cat ? C.orange : C.sub, fontWeight: "800", fontSize: 18, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {cat}
                 </button>
               ))}
             </div>
-            <input style={{ ...inp, marginBottom: 10, fontSize: 18 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => { setFoodSearch(e.target.value); setFoodCategory("全て"); }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 320, overflowY: "auto" }}>
+            <input style={{ ...inp, marginBottom: 12, fontSize: 18 }} placeholder="検索（例：チキン）" value={foodSearch} onChange={e => { setFoodSearch(e.target.value); setFoodCategory("全て"); }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 380, overflowY: "auto" }}>
               {filteredFoods.length === 0
-                ? <div style={{ color: C.sub, fontSize: 17, padding: 10 }}>該当なし</div>
+                ? <div style={{ color: C.sub, fontSize: 18, padding: 10 }}>該当なし</div>
                 : filteredFoods.map((f, i) => (
                 <button key={i} onClick={() => addMeal(f.name, f.cal)}
-                  style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", color: C.text, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontWeight: "700", fontSize: 17 }}>{f.name}</span>
-                  <span style={{ color: C.orange, fontSize: 16, fontWeight: "800", marginLeft: 8, flexShrink: 0 }}>{f.cal} kcal</span>
+                  style={{ background: C.card2, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 18px", color: C.text, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: "700", fontSize: 19 }}>{f.name}</span>
+                  <span style={{ color: C.orange, fontSize: 18, fontWeight: "800", marginLeft: 10, flexShrink: 0 }}>{f.cal} kcal</span>
                 </button>
               ))}
             </div>
