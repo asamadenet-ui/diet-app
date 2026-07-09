@@ -762,6 +762,42 @@ export default function App() {
 
   const saveApiKey = (key) => { setApiKey(key); localStorage.setItem("anthropicKey", key); };
 
+  const exportJSON = () => {
+    const data = { days, weights, goal, memos, medList, fastGoal, fastBaseElapsed, fastActive: false, fastStartTime: null, tdeeProfile: { age: tdeeAge, sex: tdeeSex, activity: tdeeActivity }, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `diet_backup_${TODAY}.json`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importJSON = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.days) setDays(prev => ({ ...prev, ...data.days }));
+        if (data.weights) setWeights(data.weights);
+        if (data.goal) setGoal(data.goal);
+        if (data.memos) setMemos(data.memos);
+        if (data.medList) setMedList(data.medList);
+        if (data.tdeeProfile) {
+          if (data.tdeeProfile.age) setTdeeAge(data.tdeeProfile.age);
+          if (data.tdeeProfile.sex) setTdeeSex(data.tdeeProfile.sex);
+          if (data.tdeeProfile.activity) setTdeeActivity(data.tdeeProfile.activity);
+        }
+        alert("✅ データを復元しました！");
+      } catch {
+        alert("❌ ファイルの読み込みに失敗しました。正しいバックアップファイルを選んでください。");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const importRef = useRef();
+
   const exportCSV = () => {
     const rows = [["日付", "種類", "名前", "カロリー/数値"]];
     Object.entries(days).sort().forEach(([date, day]) => {
@@ -1538,11 +1574,20 @@ export default function App() {
             {aiAdvice.length === 0 && <div style={{ color: C.sub, fontSize: 17, textAlign: "center", padding: "8px 0" }}>ボタンを押してAIアドバイスを取得</div>}
           </div>
 
-          {/* CSVエクスポート */}
+          {/* バックアップ・復元・CSV */}
           <div style={card}>
-            <div style={sec}>📤 EXPORT DATA</div>
+            <div style={sec}>📤 データ バックアップ</div>
+            <button onClick={exportJSON} style={{ ...sportBtn(C.orange), marginBottom: 10 }}>💾 バックアップ保存（JSON）</button>
+            <div style={{ fontSize: 14, color: C.sub, marginBottom: 20, textAlign: "center" }}>全データをファイルに保存。別の携帯への引き継ぎにも使えます。</div>
+
+            <div style={sec}>📥 データ 復元</div>
+            <input ref={importRef} type="file" accept=".json" onChange={importJSON} style={{ display: "none" }} />
+            <button onClick={() => importRef.current.click()} style={{ ...sportBtn(C.green), marginBottom: 10 }}>📂 バックアップから復元（JSON）</button>
+            <div style={{ fontSize: 14, color: C.sub, marginBottom: 20, textAlign: "center" }}>保存したJSONファイルを読み込んでデータを復元します。</div>
+
+            <div style={sec}>📊 CSV エクスポート</div>
             <button onClick={exportCSV} style={sportBtn(C.blue)}>📊 CSVでダウンロード</button>
-            <div style={{ fontSize: 15, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分の全データをエクスポート</div>
+            <div style={{ fontSize: 14, color: C.sub, marginTop: 8, textAlign: "center" }}>食事・運動・体重・水分データをCSV形式でエクスポート</div>
           </div>
 
         </>}
