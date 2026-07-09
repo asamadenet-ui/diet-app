@@ -851,10 +851,10 @@ export default function App() {
     fontFamily: "inherit", backgroundColor: C.card2, color: C.text,
     WebkitAppearance: "none", appearance: "none", display: "block",
   };
-  const card = { background: C.card, borderRadius: 16, padding: 20, margin: "12px 14px 0", border: `1px solid ${C.border}` };
-  const sec = { fontSize: 15, fontWeight: "900", color: C.sub, marginBottom: 14, letterSpacing: 2, textTransform: "uppercase" };
-  const badge = (c) => ({ background: `${c}22`, color: c, borderRadius: 8, padding: "4px 10px", fontSize: 16, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44` });
-  const statBox = (c) => ({ flex: 1, background: `${c}0D`, borderRadius: 12, padding: 12, textAlign: "center", border: `1px solid ${c}33` });
+  const card = { background: C.card, borderRadius: 20, padding: 24, margin: "14px 16px 0", border: `1px solid ${C.border}` };
+  const sec = { fontSize: 15, fontWeight: "900", color: C.sub, marginBottom: 18, letterSpacing: 2, textTransform: "uppercase" };
+  const badge = (c) => ({ background: `${c}22`, color: c, borderRadius: 10, padding: "6px 14px", fontSize: 15, fontWeight: "800", whiteSpace: "nowrap", border: `1px solid ${c}44` });
+  const statBox = (c) => ({ flex: 1, background: `${c}0D`, borderRadius: 14, padding: 16, textAlign: "center", border: `1px solid ${c}33` });
 
   const dateLabel = currentDate === TODAY ? "今日" : currentDate.slice(5).replace("-", "/");
 
@@ -1385,7 +1385,7 @@ export default function App() {
             {[...weights].reverse().slice(0, 10).map((w, i) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
                 <span style={{ color: C.sub, fontSize: 17 }}>{w.date}</span>
-                <span style={{ fontWeight: "900" }}>{w.weight} <span style={{ fontSize: 15, color: C.sub }}>kg</span></span>
+                <span style={{ fontWeight: "900", fontSize: 20 }}>{w.weight} <span style={{ fontSize: 15, color: C.sub }}>kg</span></span>
               </div>
             ))}
           </div>
@@ -1552,8 +1552,8 @@ export default function App() {
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: C.card, display: "flex", borderTop: `1px solid ${C.border}`, zIndex: 100 }}>
         {TABS.map((icon, i) => (
           <button key={i} onClick={() => setTab(i)}
-            style={{ flex: 1, padding: "10px 2px 8px", border: "none", background: "none", fontSize: 13, fontWeight: i === tab ? "900" : "normal", color: i === tab ? C.orange : C.sub2, cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", letterSpacing: 0.5 }}>
-            <div style={{ fontSize: 24, marginBottom: 2, filter: i === tab ? `drop-shadow(0 0 6px ${C.orange})` : "none" }}>{icon}</div>
+            style={{ flex: 1, padding: "14px 2px 12px", border: "none", background: "none", fontSize: 14, fontWeight: i === tab ? "900" : "normal", color: i === tab ? C.orange : C.sub2, cursor: "pointer", WebkitTapHighlightColor: "transparent", touchAction: "manipulation", letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 28, marginBottom: 4, filter: i === tab ? `drop-shadow(0 0 6px ${C.orange})` : "none" }}>{icon}</div>
             <div>{TAB_LABELS[i]}</div>
           </button>
         ))}
