@@ -1006,12 +1006,12 @@ export default function App() {
             <div style={sec}>💊 MEDICATION</div>
             {/* ヘッダー行 */}
             {medList.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", paddingBottom: 8, marginBottom: 4, borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", paddingBottom: 10, marginBottom: 6, borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ flex: 1 }} />
-                {["朝", "昼", "夕"].map(t => (
-                  <div key={t} style={{ width: 52, textAlign: "center", fontSize: 16, fontWeight: "900", color: t === "朝" ? C.yellow : t === "昼" ? C.orange : C.blue }}>{t}</div>
+                {[{t:"朝", c:C.yellow}, {t:"昼", c:C.orange}, {t:"夕", c:C.blue}].map(({t, c}) => (
+                  <div key={t} style={{ width: 64, textAlign: "center", fontSize: 20, fontWeight: "900", color: c }}>{t}</div>
                 ))}
-                <div style={{ width: 36 }} />
+                <div style={{ width: 44 }} />
               </div>
             )}
             {medList.length === 0 ? (
@@ -1019,30 +1019,32 @@ export default function App() {
             ) : (
               medList.map(med => {
                 const takenArr = dayData.takenMeds ?? [];
+                const allDone = ["朝","昼","夕"].every(t => takenArr.includes(`${med.id}_${t}`));
                 return (
-                  <div key={med.id} style={{ display: "flex", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
-                    <span style={{ flex: 1, fontSize: 18, color: C.text }}>{med.name}</span>
-                    {["朝", "昼", "夕"].map(timing => {
-                      const key = `${med.id}_${timing}`;
+                  <div key={med.id} style={{ display: "flex", alignItems: "center", padding: "14px 0", borderBottom: `1px solid ${C.border}`, background: allDone ? `${C.green}0A` : "none", borderRadius: 8, paddingLeft: 4 }}>
+                    <span style={{ flex: 1, fontSize: 20, color: allDone ? C.green : C.text, fontWeight: "700" }}>
+                      {allDone ? "✅ " : "💊 "}{med.name}
+                    </span>
+                    {[{t:"朝", c:C.yellow}, {t:"昼", c:C.orange}, {t:"夕", c:C.blue}].map(({t, c}) => {
+                      const key = `${med.id}_${t}`;
                       const checked = takenArr.includes(key);
-                      const color = timing === "朝" ? C.yellow : timing === "昼" ? C.orange : C.blue;
                       return (
-                        <button key={timing} onClick={() => toggleMed(med.id, timing)}
-                          style={{ width: 52, display: "flex", justifyContent: "center", background: "none", border: "none", cursor: "pointer", touchAction: "manipulation" }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: checked ? color : "none", border: `2px solid ${checked ? color : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, color: "#fff", fontWeight: "900" }}>
+                        <button key={t} onClick={() => toggleMed(med.id, t)}
+                          style={{ width: 64, display: "flex", justifyContent: "center", background: "none", border: "none", cursor: "pointer", touchAction: "manipulation", padding: "4px 0" }}>
+                          <div style={{ width: 44, height: 44, borderRadius: 10, background: checked ? c : "none", border: `2px solid ${checked ? c : C.sub2}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: "#fff", fontWeight: "900", boxShadow: checked ? `0 0 10px ${c}66` : "none" }}>
                             {checked ? "✓" : ""}
                           </div>
                         </button>
                       );
                     })}
                     <button onClick={() => removeMed(med.id)}
-                      style={{ width: 36, background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 24, touchAction: "manipulation" }}>×</button>
+                      style={{ width: 44, background: "none", border: "none", color: C.sub2, cursor: "pointer", fontSize: 26, touchAction: "manipulation" }}>×</button>
                   </div>
                 );
               })
             )}
-            <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-              <input style={{ ...inp, flex: 1 }} placeholder="薬・サプリ名（例：血圧の薬）" value={medInput}
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <input style={{ ...inp, flex: 1, fontSize: 18 }} placeholder="薬・サプリ名（例：血圧の薬）" value={medInput}
                 onChange={e => setMedInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && addMed()} />
               <button onClick={addMed} style={sportBtn(C.purple, { flex: "none", padding: "14px 20px", width: "auto" })}>➕</button>
