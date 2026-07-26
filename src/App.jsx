@@ -184,7 +184,7 @@ const FOOD_CAL_PER_100G = [
 ];
 
 
-const FOOD_CATEGORIES = ["全て","主食","麺類","定食・丼","寿司","肉・揚物","魚・海鮮","野菜・副菜","卵・豆腐","スイーツ","軽食・パン","ドリンク","お酒","焼き鳥","コンビニ","居酒屋","日本料理","中華料理","韓国料理","イタリア","エスニック","フレンチ","アメリカ"];
+const FOOD_CATEGORIES = ["全て","主食","麺類","定食・丼","寿司","肉・揚物","魚・海鮮","野菜・副菜","卵・豆腐","フルーツ","スイーツ","軽食・パン","ドリンク","お酒","焼き鳥","コンビニ","居酒屋","日本料理","中華料理","韓国料理","イタリア","エスニック","フレンチ","アメリカ"];
 const FOOD_DB = [
   // 主食
   { cat:"主食", name:"白米（1膳）", cal:252 }, { cat:"主食", name:"玄米（1膳）", cal:230 },
@@ -298,10 +298,22 @@ const FOOD_DB = [
   { cat:"軽食・パン", name:"メロンパン", cal:360 }, { cat:"軽食・パン", name:"あんパン", cal:280 },
   { cat:"軽食・パン", name:"クリームパン", cal:300 }, { cat:"軽食・パン", name:"サンドイッチ（ハム）", cal:310 },
   { cat:"軽食・パン", name:"サンドイッチ（たまご）", cal:340 }, { cat:"軽食・パン", name:"ホットサンド", cal:360 },
-  { cat:"軽食・パン", name:"バナナ（1本）", cal:86 }, { cat:"軽食・パン", name:"りんご（1個）", cal:138 },
-  { cat:"軽食・パン", name:"みかん（1個）", cal:40 }, { cat:"軽食・パン", name:"いちご（100g）", cal:34 },
   { cat:"軽食・パン", name:"ポテトチップス（1袋）", cal:260 }, { cat:"軽食・パン", name:"おせんべい（5枚）", cal:100 },
   { cat:"軽食・パン", name:"ポップコーン（1袋）", cal:180 }, { cat:"軽食・パン", name:"プロテインバー", cal:200 },
+  // フルーツ
+  { cat:"フルーツ", name:"バナナ（1本）", cal:86 }, { cat:"フルーツ", name:"りんご（1個）", cal:138 },
+  { cat:"フルーツ", name:"みかん（1個）", cal:40 }, { cat:"フルーツ", name:"いちご（5粒/100g）", cal:34 },
+  { cat:"フルーツ", name:"スイカ（1切れ/200g）", cal:74 }, { cat:"フルーツ", name:"ぶどう（1房/200g）", cal:118 },
+  { cat:"フルーツ", name:"シャインマスカット（1房/300g）", cal:177 }, { cat:"フルーツ", name:"桃（1個/200g）", cal:80 },
+  { cat:"フルーツ", name:"梨（1個/300g）", cal:129 }, { cat:"フルーツ", name:"メロン（1/8切れ/150g）", cal:63 },
+  { cat:"フルーツ", name:"キウイ（1個/100g）", cal:53 }, { cat:"フルーツ", name:"パイナップル（100g）", cal:54 },
+  { cat:"フルーツ", name:"マンゴー（1/2個/150g）", cal:102 }, { cat:"フルーツ", name:"ブルーベリー（100g）", cal:49 },
+  { cat:"フルーツ", name:"グレープフルーツ（1/2個/150g）", cal:57 }, { cat:"フルーツ", name:"柿（1個/200g）", cal:126 },
+  { cat:"フルーツ", name:"さくらんぼ（10粒/50g）", cal:30 }, { cat:"フルーツ", name:"パパイア（100g）", cal:33 },
+  { cat:"フルーツ", name:"ライチ（10粒/100g）", cal:63 }, { cat:"フルーツ", name:"アボカド（1/2個）", cal:140 },
+  { cat:"フルーツ", name:"プルーン（生・2個）", cal:49 }, { cat:"フルーツ", name:"レモン（1個）", cal:54 },
+  { cat:"フルーツ", name:"いちじく（1個/70g）", cal:38 }, { cat:"フルーツ", name:"アメリカンチェリー（10粒/80g）", cal:52 },
+  { cat:"フルーツ", name:"りんごジュース（200ml）", cal:92 }, { cat:"フルーツ", name:"フルーツ盛り合わせ", cal:120 },
   // ドリンク
   { cat:"ドリンク", name:"水（0kcal）", cal:0 }, { cat:"ドリンク", name:"炭酸水（0kcal）", cal:0 },
   { cat:"ドリンク", name:"緑茶（0kcal）", cal:0 }, { cat:"ドリンク", name:"麦茶（0kcal）", cal:0 },
@@ -903,6 +915,7 @@ export default function App() {
           <div>
             <div style={{ fontSize: 14, color: C.orange, fontWeight: "900", letterSpacing: 3, marginBottom: 2 }}>DIET TRACKER</div>
             <div style={{ fontSize: 24, fontWeight: "900" }}>💪 MY FITNESS</div>
+            <div style={{ fontSize: 11, color: C.sub2, marginTop: 2 }}>v2026.07.26</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 32, fontWeight: "900", color: calPct > 80 ? C.red : C.orange }}>{Math.round(calPct)}<span style={{ fontSize: 15, color: C.sub }}>%</span></div>
